@@ -17,6 +17,25 @@ const reduce = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced
 // Tres blancos y un gris: la forma se lee por luz y sombra, no por color.
 let T = { muro: 0xefefec, piso: 0xd9d9d4, a: 0xf6f6f4, b: 0xe7e7e3, c: 0xd6d6d1, d: 0xb8b8b2, marco: 0xb5b5af, acento: 0xff5b14 };
 const TA = { a: 0xffe6da, b: 0xffd9c7, c: 0xffc9b0, d: 0xf2a888, muro: 0xffe6da, marco: 0xf2a888, piso: 0xffd9c7, acento: 0xff5b14 };
+// Colores reales y sobrios por objeto (la bodega sigue blanca para que los objetos resalten)
+const COLORES = {
+  caja_m: { a: 0xc9a27a, b: 0xc39a6f, c: 0xe2c9a2, d: 0xa77f57 },
+  caja_g: { a: 0xc29770, b: 0xbb9066, c: 0xe2c9a2, d: 0xa07952 },
+  maleta: { c: 0x3c4a5e, d: 0x232a35 },
+  cama2: { a: 0xeee8dd, c: 0x8796a8 }, cama1: { a: 0xeee8dd, c: 0x9aa8a0 },
+  ropero: { a: 0xd8b48a, c: 0xc49c6e, d: 0x5e4c3c },
+  comoda: { a: 0xb98b5e, b: 0xa97c51, d: 0x4e3e30 },
+  sofa3: { a: 0x8ea29e, b: 0x7f938f, c: 0x748884, d: 0x3a3a3a }, sillon: { a: 0xb7a48a, b: 0xa8957b, c: 0x9c8970, d: 0x3a3a3a },
+  tv: { a: 0xd2b48c, b: 0xc29d72 },
+  mesa: { a: 0xcfa676, b: 0xb88c5c }, escritorio: { a: 0xe9e6e1, b: 0x8a8f94 },
+  silla: { a: 0xd2aa7a, b: 0xb88c5c },
+  refri: { a: 0xd9dde1, d: 0x8d949b },
+  lavadora: { a: 0xf3f3f1, b: 0xe1e4e7, c: 0xaeb7bf, d: 0x5f676f }, cocina: { a: 0xf1f1ef, b: 0xd9dcdf, c: 0x4b5157, d: 0x2e3236 },
+  bici: { c: 0x2f7d7a, d: 0x222326 },
+  herramientas: { a: 0xd9d9d6, b: 0xb3261e, d: 0x2b2b2b },
+  pallet: { a: 0xc8a67b, c: 0xc9a77a, d: 0xa8865a },
+  materiales: { b: 0x9aa2a9, c: 0xb5bcc2, d: 0x45494d },
+};
 const cacheMat = new Map();
 function mat(c, o = {}) {
   const k = c + JSON.stringify(o);
@@ -45,7 +64,7 @@ function aro(g, r, t, color, x, y, z) {
 
 // ---------- objetos (origen: centro de la base) ----------
 export function modelo(tipo, afuera = false) {
-  const prev = T; if (afuera) T = { ...T, ...TA };
+  const prev = T; T = afuera ? { ...T, ...TA } : { ...T, ...(COLORES[tipo] || {}) };
   try { return modeloBase(tipo); } finally { T = prev; }
 }
 function modeloBase(tipo) {
@@ -153,11 +172,11 @@ function modulo(W, L, H, conRepisa) {
   P(W, 0.012, 0.05, T.acento, 0, 0.0, L / 2 - 0.03, 0.004);
   if (conRepisa) {
     const x0 = -W / 2 + REPISA.fondo / 2, z0 = -L / 2 + REPISA.largo / 2;
-    for (const n of REPISA.niveles) P(REPISA.fondo, 0.028, REPISA.largo, T.b, x0, n.y - 0.028, z0, 0.006);
+    for (const n of REPISA.niveles) P(REPISA.fondo, 0.028, REPISA.largo, 0xd9b98c, x0, n.y - 0.028, z0, 0.006);
     const postes = 5;
     for (let i = 0; i < postes; i++) {
       const z = -L / 2 + 0.03 + (REPISA.largo - 0.06) * (i / (postes - 1));
-      for (const dx of [0.025, REPISA.fondo - 0.025]) P(0.04, 1.86, 0.04, T.c, -W / 2 + dx, 0, z, 0.008);
+      for (const dx of [0.025, REPISA.fondo - 0.025]) P(0.04, 1.86, 0.04, 0xc39f6c, -W / 2 + dx, 0, z, 0.008);
     }
   }
   return g;

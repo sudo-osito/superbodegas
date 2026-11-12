@@ -36,10 +36,10 @@ $('#probar15').addEventListener('click', () => { st.bodega = 15; st.manual = tru
 
 // ---------- fase 0: qué guardas ----------
 $('#atajos').innerHTML = Object.entries(PRESETS).map(([k, p]) => `
-  <button type="button" class="op" data-preset="${k}" aria-pressed="${st.preset === k}"><span class="izq"><span class="nom">${p.nombre}</span><span class="det">${Object.values(p.items).reduce((a, b) => a + b, 0)} cosas</span></span></button>`).join('') +
-  `<button type="button" class="op" data-preset="" aria-pressed="false"><span class="izq"><span class="nom">Todavía no sé</span><span class="det">Te ayudamos por WhatsApp</span></span></button>`;
+  <button type="button" class="op" data-preset="${k}" aria-pressed="${st.preset === k}"><span class="izq"><span class="nom">${p.nombre}</span></span></button>`).join('');
 $('#objetos').innerHTML = GRUPOS.map((g) => Object.entries(ITEMS).filter(([, it]) => it.grupo === g).map(([k, it]) => `
   <div class="fila"><span>${it.nombre}</span><span class="cont" data-item="${k}"><button type="button" data-d="-1" aria-label="Quitar ${it.nombre}">−</button><output>0</output><button type="button" data-d="1" aria-label="Agregar ${it.nombre}">+</button></span></div>`).join('')).join('');
+$('#no-se').addEventListener('click', () => { st.preset = null; st.items = {}; cambioObjetos(); });
 $('#atajos').addEventListener('click', (e) => {
   const b = e.target.closest('[data-preset]'); if (!b) return;
   const k = b.dataset.preset; st.preset = k || ''; st.items = k ? { ...PRESETS[k].items } : {};
@@ -57,7 +57,7 @@ function recomendada() {
   return 0;
 }
 function cambioObjetos() {
-  $$('[data-preset]').forEach((b) => b.setAttribute('aria-pressed', String(st.preset !== null && b.dataset.preset === st.preset)));
+  $$('#atajos [data-preset]').forEach((b) => b.setAttribute('aria-pressed', String(!!st.preset && b.dataset.preset === st.preset)));
   $$('[data-item]').forEach((c) => (c.querySelector('output').textContent = st.items[c.dataset.item] || 0));
   const rec = recomendada(); if (!st.manual && rec !== null) st.bodega = rec || 15;
   refrescar();
@@ -66,11 +66,11 @@ function cambioObjetos() {
 // ---------- fase 1: bodega · fase 2: plazo · fase 3: fecha y traslado ----------
 function pintarOpciones() {
   const rec = recomendada();
-  $('#rec').textContent = rec === null ? 'Mismo fondo y mismo alto; cambia el ancho.' : rec === 0 ? 'No cabe ni en 15 m². Elige 15 m² y te escribimos con una solución.' : `Con lo que vas a guardar, te sirve la de ${rec} m².`;
+  $('#rec').textContent = rec === null ? '' : rec === 0 ? 'No cabe ni en 15 m². Elige 15 m² y te escribimos con una solución.' : `Con lo que vas a guardar, te sirve la de ${rec} m².`;
   $('#op-bodega').innerHTML = Object.values(BODEGAS).map((b) => `
     <label class="op">${rec === b.id ? '<span class="marca">Recomendada</span>' : ''}
       <input type="radio" name="bodega" value="${b.id}" ${st.bodega === b.id ? 'checked' : ''}>
-      <span class="izq"><span class="nom">${b.m2} m²</span><span class="det">${coma(b.largo)} × ${coma(b.ancho)} × ${coma(b.alto)} m · ${b.alcanza.split(',')[0]}</span></span>
+      <span class="izq"><span class="nom">${b.m2} m²</span></span>
       <span class="der">${clp(b.precio)}<small>al mes</small></span></label>`).join('');
   $('#op-plazo').innerHTML = PLAZOS.map((p) => { const c = calcular(st.bodega, p.id, st.retiro); return `
     <label class="op">${p.id === 12 ? '<span class="marca">Mejor precio</span>' : ''}
