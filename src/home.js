@@ -55,10 +55,6 @@ cuando(host, async () => {
   actualizar(); addEventListener('scroll', actualizar, { passive: true });
 }, '800px');
 
-// ---------- tamaños: la carta apuntada se agranda ----------
-const cartas = $$('[data-carta]');
-cartas.forEach((c) => { const on = () => cartas.forEach((x) => x.classList.toggle('activa', x === c)); c.addEventListener('mouseenter', on); c.addEventListener('focus', on); });
-
 // ---------- mapa ----------
 cuando($('#mapa'), async () => {
   const L = (await import('leaflet')).default; await import('leaflet/dist/leaflet.css');

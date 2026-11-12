@@ -21,7 +21,7 @@
   </div>
 
   <form class="arr-panel" id="form" novalidate>
-    <div class="prog" aria-hidden="true"><div class="pasos-i"><i></i><i></i><i></i><i></i><i></i></div><span id="prog-txt">1 de 5</span></div>
+    <div class="prog" aria-hidden="true"><div class="pasos-i"><i></i><i></i><i></i><i></i></div><span id="prog-txt">1 de 4</span></div>
 
     <section class="fase activa" data-fase="0">
       <h1>¿Qué vas a guardar?</h1>
@@ -29,21 +29,18 @@
       <div class="ops" id="atajos"></div>
       <button type="button" class="mas" id="ver-objetos" aria-expanded="false" aria-controls="objetos">Elegir objeto por objeto</button>
       <div class="objetos" id="objetos"></div>
+      <h2 class="sub-fase">Elige tu bodega</h2>
+      <p class="ayuda" id="rec"></p>
+      <div class="ops dos" id="op-bodega"></div>
     </section>
 
     <section class="fase" data-fase="1">
-      <h1>Elige tu bodega.</h1>
-      <p class="ayuda" id="rec"></p>
-      <div class="ops" id="op-bodega"></div>
-    </section>
-
-    <section class="fase" data-fase="2">
       <h1>¿Por cuánto tiempo?</h1>
       <p class="ayuda">Mientras más tiempo, menos pagas al mes.</p>
       <div class="ops" id="op-plazo"></div>
     </section>
 
-    <section class="fase" data-fase="3">
+    <section class="fase" data-fase="2">
       <h1>¿Desde cuándo?</h1>
       <div class="campo" id="c-inicio"><label for="inicio">Fecha de inicio</label><input type="date" id="inicio" name="inicio" required><span class="error"></span></div>
       <div class="ops dos" id="op-traslado">
@@ -53,7 +50,7 @@
       <div class="campo" id="c-direccionRetiro" hidden><label for="direccionRetiro">Dirección de retiro</label><input id="direccionRetiro" name="direccionRetiro" autocomplete="street-address" placeholder="Calle, número y comuna"><span class="error"></span></div>
     </section>
 
-    <section class="fase" data-fase="4">
+    <section class="fase" data-fase="3">
       <h1>¿A quién le escribimos?</h1>
       <p class="ayuda">Te contactamos por WhatsApp para confirmar la bodega y enviarte el contrato.</p>
       <div class="campo" id="c-nombre"><label for="nombre">Nombre y apellido</label><input id="nombre" name="nombre" autocomplete="name" maxlength="80" required><span class="error"></span></div>

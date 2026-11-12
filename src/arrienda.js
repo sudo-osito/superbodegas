@@ -17,7 +17,7 @@ const st = {
   preset: PRESETS[q.get('preset')] ? q.get('preset') : null,
   plazo: 3, retiro: false,
 };
-const FASES = 5;
+const FASES = 4;
 const coma = (n) => String(n).replace('.', ',');
 const total = () => Object.values(st.items).reduce((a, b) => a + b, 0);
 
@@ -92,8 +92,8 @@ $('#inicio').addEventListener('change', () => barraTotal());
 function barraTotal() {
   const c = calcular(st.bodega, st.plazo, st.retiro); const p = PLAZOS.find((x) => x.id === st.plazo);
   const f = new Date($('#inicio').value + 'T12:00:00');
-  $('#t-nom').textContent = `Bodega ${st.bodega} m²${st.fase >= 2 ? ' · ' + p.nombre : ''}`;
-  $('#t-det').textContent = st.fase >= 3 && !isNaN(f) ? `Desde el ${f.toLocaleDateString('es-CL', { day: 'numeric', month: 'long' })} · ${clp(c.mensual)} al mes` : `${clp(c.mensual)} al mes`;
+  $('#t-nom').textContent = `Bodega ${st.bodega} m²${st.fase >= 1 ? ' · ' + p.nombre : ''}`;
+  $('#t-det').textContent = st.fase >= 2 && !isNaN(f) ? `Desde el ${f.toLocaleDateString('es-CL', { day: 'numeric', month: 'long' })} · ${clp(c.mensual)} al mes` : `${clp(c.mensual)} al mes`;
   $('#t-monto').textContent = clp(c.primerMes);
   $('#t-sub').textContent = c.promo ? 'primer mes · 50 % de apertura' : 'pagas al empezar';
   $('#seguir').textContent = st.fase === FASES - 1 ? 'Arrienda' : 'Continuar';
@@ -152,11 +152,11 @@ function datos() {
 }
 function validarFase(n, d) {
   const e = {};
-  if (n === 3) {
+  if (n === 2) {
     if (!d.inicio || d.inicio < $('#inicio').min || d.inicio > $('#inicio').max) e.inicio = 'Elige una fecha dentro de los próximos 4 meses';
     if (st.retiro && d.direccionRetiro.length < 5) e.direccionRetiro = 'Indica dónde retiramos tus cosas';
   }
-  if (n === 4) {
+  if (n === 3) {
     if (d.nombre.length < 3) e.nombre = 'Escribe tu nombre y apellido';
     if (!/^(\+?56)?9\d{8}$/.test(d.telefono)) e.telefono = 'Usa un celular chileno: 9 1234 5678';
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(d.email)) e.email = 'Revisa el correo';
@@ -191,4 +191,4 @@ $('#form').addEventListener('submit', async (ev) => {
 
 // arranque: si viene con tamaño elegido desde el inicio, igual parte preguntando qué guardas
 const faseGuardada = leerBorrador() || 0;
-cambioObjetos(); irFase(Math.min(faseGuardada, 3));
+cambioObjetos(); irFase(Math.min(faseGuardada, 2));
