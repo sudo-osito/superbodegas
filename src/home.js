@@ -4,66 +4,62 @@ import { cabecera, revelar, cuando } from './ui.js';
 
 cabecera();
 revelar();
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // precios desde una sola fuente
 document.querySelectorAll('[data-precio]').forEach((el) => (el.textContent = clp(BODEGAS[el.dataset.precio].precio)));
 document.querySelectorAll('[data-desde]').forEach((el) => (el.textContent = clp(Math.min(...Object.values(BODEGAS).map((b) => b.precio)))));
 const lc = COMPARA.find((c) => c.m2 === 14);
-if (lc) document.querySelectorAll('[data-ahorro]').forEach((el) => (el.textContent = Math.round((1 - BODEGAS[15].precio / lc.precio) * 100) + ' % menos'));
+document.querySelector('[data-lc-precio]').textContent = clp(lc.precio) + ' al mes';
+document.querySelector('[data-sb-precio]').textContent = clp(BODEGAS[15].precio * 2) + ' al mes · 2 bodegas';
 
-// la foto del inicio se acerca apenas al bajar
+// hero: la foto se acerca apenas al bajar
 const img = document.getElementById('hero-img');
-if (img && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
-  const f = () => { const r = img.parentElement.getBoundingClientRect(); const k = Math.min(1, Math.max(0, -r.top / r.height)); img.style.transform = `scale(${1.06 - 0.06 * Math.min(1, (innerHeight - r.top) / (innerHeight + r.height))})`; };
-  f(); addEventListener('scroll', f, { passive: true });
-}
+if (!reduce) { const f = () => { const k = Math.min(1, scrollY / innerHeight); img.style.transform = `scale(${1.04 + k * 0.06}) translateY(${k * 4}%)`; }; f(); addEventListener('scroll', f, { passive: true }); }
 
-// ---------- la bodega que se llena con el scroll ----------
-const host = document.getElementById('escena');
-const pasos = [...document.querySelectorAll('.paso')];
-const medidas = document.getElementById('medidas');
-let b3 = null, actual = -1;
-
-function ponerMedidas(id) {
-  const b = BODEGAS[id];
-  medidas.innerHTML = `<span><b>${String(b.largo).replace('.', ',')} m</b> de fondo</span><span><b>${String(b.ancho).replace('.', ',')} m</b> de ancho</span><span><b>${String(b.alto).replace('.', ',')} m</b> de alto</span>`;
-}
-function irPaso(i) {
-  if (i === actual || !b3) return; actual = i;
-  pasos.forEach((p, k) => p.classList.toggle('activo', k === i));
-  const p = pasos[i]; const id = Number(p.dataset.bodega);
-  b3.setItems(p.dataset.preset ? PRESETS[p.dataset.preset].items : {});
-  b3.setBodega(id, BODEGAS[id]);
-  b3.mostrar(0); ponerMedidas(id);
-  avance();
-}
-// dentro de cada paso, los objetos entran a medida que bajas
-function avance() {
-  if (!b3 || actual < 0) return;
-  const p = pasos[actual]; const r = p.getBoundingClientRect();
-  const ref = innerWidth < 900 ? innerHeight * 0.95 : innerHeight * 0.75;
-  const k = Math.min(1, Math.max(0, (ref - r.top) / (r.height * 0.75)));
-  b3.mostrar(Math.round(b3.total * k));
-}
-function cual() {
-  const medio = innerWidth < 900 ? innerHeight * 0.8 : innerHeight * 0.5; let mejor = 0, dist = Infinity;
-  pasos.forEach((p, i) => { const r = p.getBoundingClientRect(); const d = Math.abs(r.top + r.height / 2 - medio); if (d < dist) { dist = d; mejor = i; } });
-  return mejor;
+// ---------- superfuerza: escena fija, la bodega se llena con el scroll ----------
+const sec = document.getElementById('fuerza'); const host = document.getElementById('escena');
+const estados = [...sec.querySelectorAll('.estado-txt')]; const marcas = [...sec.querySelectorAll('.avance i')];
+const ETAPAS = [{ id: 7, preset: 'depto1' }, { id: 15, preset: 'casa3' }];
+let b3 = null, etapa = -1;
+function progreso() { const r = sec.getBoundingClientRect(); return Math.min(1, Math.max(0, -r.top / (r.height - innerHeight))); }
+function actualizar() {
+  if (!b3) return;
+  const p = progreso() * ETAPAS.length; const e = Math.min(ETAPAS.length - 1, Math.floor(p)); const dentro = Math.min(1, (p - e) * 1.35);
+  if (e !== etapa) {
+    etapa = e; const E = ETAPAS[e];
+    estados.forEach((x, i) => x.classList.toggle('activo', i === e)); marcas.forEach((x, i) => x.classList.toggle('on', i <= e));
+    b3.setItems(PRESETS[E.preset].items); b3.setBodega(E.id, BODEGAS[E.id]); b3.mostrar(0);
+  }
+  b3.mostrar(Math.round(b3.total * dentro));
 }
 cuando(host, async () => {
   const { crearBodega } = await import('./bodega3d.js');
-  b3 = crearBodega(host, { girar: true, distancia: innerWidth < 900 ? 0.98 : 0.74 });
-  irPaso(cual());
-  addEventListener('scroll', () => { const i = cual(); if (i !== actual) irPaso(i); else avance(); }, { passive: true });
-}, '600px');
+  b3 = crearBodega(host, { girar: false, distancia: innerWidth < 900 ? 1.08 : 1.02 });
+  actualizar(); addEventListener('scroll', actualizar, { passive: true });
+}, '800px');
+
+// ---------- tamaños: la carta apuntada se agranda ----------
+const cartas = [...document.querySelectorAll('[data-carta]')];
+cartas.forEach((c) => { const on = () => cartas.forEach((x) => x.classList.toggle('activa', x === c)); c.addEventListener('mouseenter', on); c.addEventListener('focus', on); });
+
+// ---------- superprecio: los m² aparecen cuadro a cuadro ----------
+document.querySelectorAll('[data-celdas]').forEach((el) => {
+  const n = +el.dataset.celdas, corte = +(el.dataset.corte || 0);
+  el.innerHTML = Array.from({ length: n }, (_, i) => `<i${corte && i === corte ? ' class="corte"' : ''}></i>`).join('');
+});
+cuando(document.getElementById('metros'), () => {
+  document.querySelectorAll('[data-celdas]').forEach((el, f) => [...el.children].forEach((c, i) => setTimeout(() => c.classList.add('on'), reduce ? 0 : 250 + f * 500 + i * 28)));
+}, '-25% 0px');
 
 // ---------- mapa ----------
 cuando(document.getElementById('mapa'), async () => {
   const L = (await import('leaflet')).default; await import('leaflet/dist/leaflet.css');
   const { lat, lng, zoom } = NEGOCIO.mapa;
-  const mapa = L.map('mapa', { scrollWheelZoom: false, zoomControl: false, attributionControl: true }).setView([lat, lng], zoom);
+  const chico = innerWidth < 760;
+  const mapa = L.map('mapa', { scrollWheelZoom: false, zoomControl: false, attributionControl: true }).setView([lat - (chico ? 0.03 : 0), lng - (chico ? 0 : 0.09)], zoom);
   L.control.zoom({ position: 'bottomright' }).addTo(mapa);
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '© OpenStreetMap' }).addTo(mapa);
-  const icono = L.divIcon({ className: '', iconSize: [52, 52], iconAnchor: [26, 26], html: '<img class="pin" src="/marca/marca-abierta.svg" alt="">' });
+  const icono = L.divIcon({ className: '', iconSize: [56, 56], iconAnchor: [28, 28], html: '<img class="pin" src="/marca/icono-180.png" alt="">' });
   L.marker([lat, lng], { icon: icono, title: 'Super Bodegas · Lampa' }).addTo(mapa);
 }, '400px');

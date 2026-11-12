@@ -4,9 +4,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Arrienda · Super Bodegas</title>
-  <meta name="description" content="Arrienda tu bodega en Lampa: tamaño, plazo y fecha. Ves el precio al tiro y te escribimos por WhatsApp.">
+  <meta name="description" content="Arrienda tu bodega en Lampa en cinco pasos. Ves el precio al tiro y te escribimos por WhatsApp.">
   <meta name="theme-color" content="#ffffff">
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="apple-touch-icon" href="/marca/icono-180.png">
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
   <link rel="stylesheet" href="/src/styles.css">
@@ -14,51 +15,47 @@
 <body>
 <!-- @cabecera -->
 <main class="wrap-ancho arr" id="arr">
-  <div class="arr-escena" aria-hidden="true">
-    <div class="lienzo" id="escena"></div>
-    <div class="estado"><div class="barra"><i id="barra"></i></div><p><span id="estado-txt">Bodega vacía</span><b id="estado-pct"></b></p></div>
+  <div class="arr-escena">
+    <div class="lienzo" id="escena" aria-hidden="true"></div>
+    <div class="arr-estado" aria-live="polite"><p id="estado"></p><button type="button" class="boton chico-b negro" id="probar15" hidden>Probar con 15 m²</button></div>
   </div>
 
-  <form class="arr-form" id="form" novalidate>
-    <div class="bloque">
-      <h1 class="t2" style="font-size:clamp(40px,4.4vw,56px)">Arrienda tu bodega.</h1>
-      <p class="gris">Ves el precio al tiro. Después te escribimos por WhatsApp para confirmar y firmar.</p>
-    </div>
+  <form class="arr-panel" id="form" novalidate>
+    <div class="prog" aria-hidden="true"><div class="pasos-i"><i></i><i></i><i></i><i></i><i></i></div><span id="prog-txt">1 de 5</span></div>
 
-    <fieldset class="bloque" style="border:0;padding:0;margin:0">
-      <h2>Tamaño.</h2>
-      <div class="ops" id="op-bodega"></div>
-    </fieldset>
-
-    <div class="bloque">
-      <h2>¿Qué vas a guardar? <span>Opcional.</span></h2>
-      <p class="ayuda" id="rec">Elige una opción y te decimos qué tamaño te sirve.</p>
-      <div class="atajos" id="atajos"></div>
+    <section class="fase activa" data-fase="0">
+      <h1>¿Qué vas a guardar?</h1>
+      <p class="ayuda">Míralo entrar en la bodega. Te decimos qué tamaño te sirve.</p>
+      <div class="ops" id="atajos"></div>
       <button type="button" class="mas" id="ver-objetos" aria-expanded="false" aria-controls="objetos">Elegir objeto por objeto</button>
       <div class="objetos" id="objetos"></div>
-    </div>
+    </section>
 
-    <fieldset class="bloque" style="border:0;padding:0;margin:0">
-      <h2>Plazo.</h2>
+    <section class="fase" data-fase="1">
+      <h1>Elige tu bodega.</h1>
+      <p class="ayuda" id="rec"></p>
+      <div class="ops" id="op-bodega"></div>
+    </section>
+
+    <section class="fase" data-fase="2">
+      <h1>¿Por cuánto tiempo?</h1>
+      <p class="ayuda">Mientras más tiempo, menos pagas al mes.</p>
       <div class="ops" id="op-plazo"></div>
-    </fieldset>
+    </section>
 
-    <div class="bloque">
-      <h2>¿Desde cuándo?</h2>
+    <section class="fase" data-fase="3">
+      <h1>¿Desde cuándo?</h1>
       <div class="campo" id="c-inicio"><label for="inicio">Fecha de inicio</label><input type="date" id="inicio" name="inicio" required><span class="error"></span></div>
-    </div>
-
-    <fieldset class="bloque" style="border:0;padding:0;margin:0">
-      <h2>¿Cómo llegan tus cosas?</h2>
       <div class="ops dos" id="op-traslado">
         <label class="op"><input type="radio" name="traslado" value="yo" checked><span class="izq"><span class="nom">Las llevo yo</span><span class="det">Estacionas al lado</span></span></label>
-        <label class="op"><input type="radio" name="traslado" value="retiro"><span class="izq"><span class="nom">Retiro a domicilio</span><span class="det" id="det-retiro"></span></span></label>
+        <label class="op"><input type="radio" name="traslado" value="retiro"><span class="izq"><span class="nom">Vengan a buscarlas</span><span class="det" id="det-retiro"></span></span></label>
       </div>
       <div class="campo" id="c-direccionRetiro" hidden><label for="direccionRetiro">Dirección de retiro</label><input id="direccionRetiro" name="direccionRetiro" autocomplete="street-address" placeholder="Calle, número y comuna"><span class="error"></span></div>
-    </fieldset>
+    </section>
 
-    <div class="bloque">
-      <h2>Tus datos.</h2>
+    <section class="fase" data-fase="4">
+      <h1>¿A quién le escribimos?</h1>
+      <p class="ayuda">Te contactamos por WhatsApp para confirmar la bodega y enviarte el contrato.</p>
       <div class="campo" id="c-nombre"><label for="nombre">Nombre y apellido</label><input id="nombre" name="nombre" autocomplete="name" maxlength="80" required><span class="error"></span></div>
       <div class="campos">
         <div class="campo" id="c-telefono"><label for="telefono">Celular</label><input id="telefono" name="telefono" type="tel" inputmode="tel" autocomplete="tel" placeholder="9 1234 5678" maxlength="16" required><span class="error"></span></div>
@@ -69,28 +66,29 @@
         <div class="campo" id="c-comuna"><label for="comuna">Comuna</label><input id="comuna" name="comuna" autocomplete="address-level2" list="comunas" maxlength="60"><span class="error"></span></div>
       </div>
       <datalist id="comunas"><option>Lampa</option><option>Colina</option><option>Chicureo</option><option>Quilicura</option><option>Batuco</option><option>Pudahuel</option><option>Huechuraba</option><option>Til Til</option><option>Renca</option></datalist>
-      <div class="campo"><label for="comentario">Comentario (opcional)</label><textarea id="comentario" name="comentario" maxlength="600" placeholder="Por ejemplo: necesito factura, llego con camión, guardo un auto…"></textarea></div>
+      <div class="campo"><label for="comentario">Comentario (opcional)</label><textarea id="comentario" name="comentario" maxlength="600" placeholder="Por ejemplo: necesito factura, llego con camión…"></textarea></div>
       <div class="hp" aria-hidden="true"><label for="empresa_web">No llenar</label><input id="empresa_web" name="empresa_web" tabindex="-1" autocomplete="off"></div>
-      <label style="display:flex;gap:12px;align-items:flex-start;font-size:14px;color:var(--gris);cursor:pointer"><input type="checkbox" id="acepto" style="width:18px;height:18px;margin-top:2px;accent-color:#1d1d1f;flex:none">Acepto que Super Bodegas me contacte por WhatsApp, teléfono o correo para coordinar este arriendo.</label>
-      <p class="error-general" id="error-general" role="alert"></p>
-    </div>
+      <label class="acepto"><input type="checkbox" id="acepto">Acepto que Super Bodegas me contacte por WhatsApp, teléfono o correo para este arriendo.</label>
+    </section>
+    <p class="error-general" id="error-general" role="alert"></p>
   </form>
 </main>
 
 <section class="wrap listo" id="listo" hidden aria-live="polite">
-  <img src="/marca/marca-abierta.svg" width="64" height="64" alt="">
+  <img class="mascota" src="/marca/mascota.png" alt="" width="180" height="120">
   <h1 class="t2" id="listo-titulo">Listo.</h1>
-  <p class="sub" id="listo-texto"></p>
+  <p class="sub" id="listo-texto" style="max-width:40ch"></p>
   <p class="codigo">Código de tu solicitud: <b id="codigo"></b></p>
-  <div class="acciones"><a class="boton" id="listo-wa" target="_blank" rel="noopener">Escríbenos por WhatsApp</a><a class="enlace" href="/">Volver al inicio</a></div>
+  <div class="acciones" style="justify-content:center"><a class="boton" id="listo-wa" target="_blank" rel="noopener">Escríbenos por WhatsApp</a><a class="enlace" href="/">Volver al inicio</a></div>
 </section>
 
 <div class="total" id="total">
   <div class="wrap-ancho">
     <div class="res"><b id="t-nom"></b><span id="t-det"></span></div>
     <div class="der">
-      <div class="monto"><b id="t-monto"></b><span id="t-sub">pagas al empezar</span></div>
-      <button class="boton" type="submit" form="form" id="enviar">Arrienda</button>
+      <button type="button" class="atras" id="atras" hidden>Atrás</button>
+      <div class="monto"><b id="t-monto"></b><span id="t-sub"></span></div>
+      <button class="boton" type="submit" form="form" id="seguir">Continuar</button>
     </div>
   </div>
 </div>

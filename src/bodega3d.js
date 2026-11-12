@@ -15,7 +15,8 @@ export const REPISA = { fondo: 0.45, largo: 4.2, niveles: [{ y: 0.12, libre: 0.7
 const reduce = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // Tres blancos y un gris: la forma se lee por luz y sombra, no por color.
-const T = { muro: 0xefefec, piso: 0xd9d9d4, a: 0xf6f6f4, b: 0xe7e7e3, c: 0xd6d6d1, d: 0xb8b8b2, marco: 0xb5b5af, acento: 0xff5b14 };
+let T = { muro: 0xefefec, piso: 0xd9d9d4, a: 0xf6f6f4, b: 0xe7e7e3, c: 0xd6d6d1, d: 0xb8b8b2, marco: 0xb5b5af, acento: 0xff5b14 };
+const TA = { a: 0xffe6da, b: 0xffd9c7, c: 0xffc9b0, d: 0xf2a888, muro: 0xffe6da, marco: 0xf2a888, piso: 0xffd9c7, acento: 0xff5b14 };
 const cacheMat = new Map();
 function mat(c, o = {}) {
   const k = c + JSON.stringify(o);
@@ -43,7 +44,11 @@ function aro(g, r, t, color, x, y, z) {
 }
 
 // ---------- objetos (origen: centro de la base) ----------
-export function modelo(tipo) {
+export function modelo(tipo, afuera = false) {
+  const prev = T; if (afuera) T = { ...T, ...TA };
+  try { return modeloBase(tipo); } finally { T = prev; }
+}
+function modeloBase(tipo) {
   const { w, d, h } = ITEMS[tipo]; const g = new THREE.Group(); const P = (...a) => pieza(g, ...a);
   switch (tipo) {
     case 'caja_m': case 'caja_g': {
@@ -135,27 +140,17 @@ export function modelo(tipo) {
   return g;
 }
 
-// ---------- el módulo: piso + dos murallas largas + puertas abiertas hacia afuera ----------
+// ---------- el módulo: piso + solo las dos paredes de atrás (vista 3/4 desde el lado de la puerta) ----------
 function modulo(W, L, H, conRepisa) {
-  const g = new THREE.Group(); const P = (...a) => pieza(g, ...a);
-  P(W + 0.14, 0.1, L + 0.14, T.piso, 0, -0.1, 0, 0.01);
-  for (const s of [-1, 1]) {
-    const x = s * (W / 2 + 0.03);
-    P(0.06, H, L, T.muro, x, 0, 0, 0.004);
-    P(0.1, 0.1, L + 0.1, T.marco, x, H - 0.1, 0, 0.01);
-    P(0.1, 0.12, L + 0.1, T.marco, x, 0, 0, 0.01);
-    for (const z of [-L / 2, L / 2]) P(0.1, H, 0.1, T.marco, x, 0, z, 0.01);
-  }
-  const hoja = W / 2 - 0.02;
-  for (const s of [-1, 1]) {
-    const piv = new THREE.Group(); piv.position.set(s * (W / 2), 0, L / 2 + 0.05);
-    pieza(piv, hoja, H - 0.14, 0.045, T.muro, -s * hoja / 2, 0.07, 0, 0.008);
-    pieza(piv, 0.02, 0.22, 0.03, T.d, -s * (hoja - 0.1), 1.0, 0.035, 0.008);
-    if (s === 1) pieza(piv, 0.16, 0.09, 0.008, T.acento, -s * hoja / 2, H - 0.32, 0.026, 0.004);
-    piv.userData.abierta = s * (Math.PI / 2 + 0.22);
-    piv.rotation.y = piv.userData.abierta;
-    g.add(piv);
-  }
+  const g = new THREE.Group(); const P = (...a) => pieza(g, ...a); const e = 0.06;
+  P(W + 0.14, 0.1, L + 0.14, T.piso, 0, -0.1, 0, 0.012);
+  P(e, H, L + e, T.muro, -W / 2 - e / 2, 0, -e / 2, 0.004);          // muro largo del fondo
+  P(W + e, H, e, T.muro, -e / 2, 0, -L / 2 - e / 2, 0.004);          // muro del extremo
+  P(e + 0.04, 0.08, L + e + 0.04, T.marco, -W / 2 - e / 2, H - 0.08, -e / 2, 0.01);
+  P(W + e + 0.04, 0.08, e + 0.04, T.marco, -e / 2, H - 0.08, -L / 2 - e / 2, 0.01);
+  P(0.09, H, 0.09, T.marco, -W / 2 - e / 2, 0, -L / 2 - e / 2, 0.01);
+  // borde de la puerta: una línea naranja en el piso marca dónde termina la bodega
+  P(W, 0.012, 0.05, T.acento, 0, 0.0, L / 2 - 0.03, 0.004);
   if (conRepisa) {
     const x0 = -W / 2 + REPISA.fondo / 2, z0 = -L / 2 + REPISA.largo / 2;
     for (const n of REPISA.niveles) P(REPISA.fondo, 0.028, REPISA.largo, T.b, x0, n.y - 0.028, z0, 0.006);
@@ -208,10 +203,11 @@ export function crearBodega(host, opts = {}) {
   function encuadrar(animar = true) {
     if (!st.bodega) return;
     const W = st.bodega.ancho, L = st.bodega.largo, H = st.bodega.alto;
-    const target = new THREE.Vector3(0, H * 0.32, -0.25);
-    const dir = new THREE.Vector3(opts.lado ?? 0.16, 1.0, 0.78).normalize();
+    const extra = st.afuera ? 2.6 : 0;
+    const target = new THREE.Vector3(0, H * 0.3, extra * 0.55);
+    const dir = new THREE.Vector3(1.0, 0.82, 0.62).normalize();
     // radio que envuelve piso, murallas y puertas abiertas
-    const r = Math.hypot(W / 2 + W / 2, L / 2 + 0.6, H / 2) * 1.0;
+    const r = Math.hypot(Math.max(W, 2.5) / 2 + 0.3, L / 2 + 0.3 + extra, H / 2);
     const fovV = THREE.MathUtils.degToRad(cam.fov) / 2, fovH = Math.atan(Math.tan(fovV) * cam.aspect);
     const dist = (r / Math.sin(Math.min(fovV, fovH))) * (opts.distancia || 0.95);
     const pos = target.clone().add(dir.multiplyScalar(dist));
@@ -237,9 +233,7 @@ export function crearBodega(host, opts = {}) {
     if (cambia) {
       if (mod) scene.remove(mod);
       mod = modulo(bodega.ancho, bodega.largo, bodega.alto, conRepisa); scene.add(mod);
-      if (!reduce) for (const p of mod.children.filter((c) => c.userData.abierta !== undefined)) {
-        const fin = p.userData.abierta; p.rotation.y = 0; tween(0, fin, 1100, (v) => (p.rotation.y = v), 250, easeInOut);
-      }
+      if (!reduce) { mod.scale.set(1, 0.001, 1); tween(0.001, 1, 700, (v) => mod.scale.set(1, v, 1), 0, easeOut); }
       for (const o of objetos.values()) { scene.remove(o.g); } objetos.clear();
       encuadrar();
     }
@@ -250,20 +244,31 @@ export function crearBodega(host, opts = {}) {
     if (!st.bodega) return null;
     const W = st.bodega.ancho, L = st.bodega.largo;
     const res = empacar(expandir(st.cuenta), st.bodega, st.conRepisa ? REPISA : null);
-    const orden = [...res.puestos].sort((a, b) => a.z - b.z || a.y - b.y || a.x - b.x);
-    const vivos = new Set(orden.map((p) => p.id));
+    const dentro = [...res.puestos].sort((a, b) => a.z - b.z || a.y - b.y || a.x - b.x).map((p) => ({ ...p, x: p.x - W / 2, z: p.z - L / 2, afuera: false }));
+    // lo que no cabe se apila frente a la puerta, en naranja suave
+    let fuera = [];
+    if (res.afuera.length) {
+      const patio = { ancho: Math.max(3.2, W + 1.2), largo: 3.6, alto: 2.0 };
+      const r2 = empacar(res.afuera, patio, null);
+      fuera = r2.puestos.sort((a, b) => b.z - a.z || a.y - b.y).map((p) => ({ ...p, x: p.x - patio.ancho / 2 + 0.2, z: L / 2 + 0.35 + p.z, afuera: true }));
+    }
+    st.afuera = res.afuera.length;
+    const orden = [...dentro, ...fuera];
+    const vivos = new Set(orden.map((p) => p.id + (p.afuera ? '!' : '')));
     for (const [id, o] of objetos) if (!vivos.has(id)) { if (o.dentro) quitar(o); else scene.remove(o.g); objetos.delete(id); }
     for (const p of orden) {
-      const pos = new THREE.Vector3(p.x - W / 2, p.y, p.z - L / 2); const rot = p.rot ? Math.PI / 2 : 0;
-      let o = objetos.get(p.id);
-      if (!o) { const g = modelo(p.tipo); g.visible = false; scene.add(g); o = { g, dentro: false }; objetos.set(p.id, o); }
-      const antes = o.dest; o.dest = pos; o.rot = rot;
+      const key = p.id + (p.afuera ? '!' : '');
+      const pos = new THREE.Vector3(p.x, p.y, p.z); const rot = p.rot ? Math.PI / 2 : 0;
+      let o = objetos.get(key);
+      if (!o) { const g = modelo(p.tipo, p.afuera); g.visible = false; scene.add(g); o = { g, dentro: false }; objetos.set(key, o); }
+      const antes = o.dest; o.dest = pos; o.rot = rot; p.key = key;
       if (o.dentro && antes && antes.distanceTo(pos) > 0.005) {
         const a = o.g.position.clone(), r0 = o.g.rotation.y;
         tween(0, 1, 480, (e) => { o.g.position.lerpVectors(a, pos, e); o.g.position.y += Math.sin(Math.PI * e) * 0.35; o.g.rotation.y = r0 + (rot - r0) * e; }, 0, easeInOut);
       }
     }
-    st.res = res; st.orden = orden; opts.onPack && opts.onPack(res); pedir(200);
+    const cambioEncuadre = (st._afueraAntes > 0) !== (st.afuera > 0); st._afueraAntes = st.afuera;
+    st.res = res; st.orden = orden; if (cambioEncuadre) encuadrar(); opts.onPack && opts.onPack(res); pedir(200);
     return res;
   }
   function quitar(o) { const g = o.g; const y0 = g.position.y; tween(0, 1, 320, (e) => { g.position.y = y0 + e * 2; g.scale.setScalar(Math.max(0.001, 1 - e)); }, 0, easeIn, () => scene.remove(g)); }
@@ -271,7 +276,7 @@ export function crearBodega(host, opts = {}) {
   function mostrar(n = Infinity) {
     n = Math.min(n, st.orden.length); let k = 0;
     st.orden.forEach((p, i) => {
-      const o = objetos.get(p.id); if (!o) return;
+      const o = objetos.get(p.key); if (!o) return;
       if (i < n && !o.dentro) {
         o.dentro = true; const g = o.g; g.visible = true; g.scale.setScalar(1); g.rotation.y = o.rot;
         if (reduce) { g.position.copy(o.dest); return; }

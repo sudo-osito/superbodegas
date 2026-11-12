@@ -6,10 +6,11 @@
   <title>Super Bodegas · Bodegas en Lampa</title>
   <meta name="description" content="Bodegas de 7 y 15 m² en Lampa. Llegas en auto hasta la puerta. Desde $69.990 al mes.">
   <meta name="theme-color" content="#ffffff">
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="apple-touch-icon" href="/marca/icono-180.png">
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-  <link rel="preload" as="image" href="/img/hero-fondo-1536.jpg">
+  <link rel="preload" as="image" href="/img/hero-alto-1536.jpg">
   <link rel="stylesheet" href="/src/styles.css">
   <script>document.documentElement.classList.add('js')</script>
 </head>
@@ -18,155 +19,120 @@
 <main>
 
   <section class="hero">
-    <div class="wrap">
-      <h1 class="t1 entra">Espacio de sobra.</h1>
-      <p class="sub entra">Bodegas de 7 y 15 m² en Lampa. <b>Llegas en auto hasta la puerta.</b></p>
-      <div class="acciones entra"><a class="boton" href="/arrienda.html">Arrienda</a><a class="enlace" href="#bodegas">Ver las bodegas</a></div>
+    <img id="hero-img" src="/img/hero-alto-1536.jpg" srcset="/img/hero-alto-900.jpg 900w, /img/hero-alto-1536.jpg 1536w" sizes="100vw" alt="Fila de bodegas en Lampa con una abierta y su interior iluminado de seis metros de fondo" fetchpriority="high">
+    <div class="wrap encima">
+      <span class="poder entra">Super Bodegas · Lampa</span>
+      <h1 class="t1 entra">Bodegas con superpoderes.</h1>
+      <p class="sub entra">7 y 15 m², seis metros de fondo. Llegas en auto hasta la puerta.</p>
+      <div class="acciones entra" style="justify-content:center"><a class="boton" href="/arrienda.html">Arrienda</a><a class="enlace" href="#tamanos">Ver tamaños</a></div>
       <p class="precio-desde entra">Desde <span data-desde>$69.990</span> al mes.</p>
     </div>
-    <div class="hero-foto"><img id="hero-img" src="/img/hero-fondo-1536.jpg" srcset="/img/hero-fondo-1000.jpg 1000w, /img/hero-fondo-1536.jpg 1536w" sizes="100vw" alt="Bodega de Super Bodegas con las dos puertas abiertas y seis metros de fondo iluminados" fetchpriority="high"></div>
   </section>
 
-  <section class="seccion" id="cabe" aria-label="Qué cabe en cada bodega">
-    <div class="wrap llenado">
-      <div class="llenado-textos">
-        <div class="paso" data-paso="0" data-bodega="15" data-preset="">
-          <div class="cifra">6 m <small>de fondo</small></div>
-          <h2 class="t3">Más de lo que parece desde la puerta.</h2>
-          <p class="gris">Todas nuestras bodegas miden seis metros de largo y 2,4 de alto. Entran muebles grandes sin desarmarlos.</p>
+  <section class="fuerza" id="fuerza" aria-label="Superfuerza: qué cabe en cada bodega">
+    <div class="fija wrap">
+      <div>
+        <span class="poder">Superfuerza</span>
+        <div class="textos">
+          <div class="estado-txt" data-e="0"><div class="cifra">7 m²</div><h2 class="t3">Aquí cabe un depto entero.</h2><p class="gris">Cama, refrigerador, lavadora, living, comedor y una docena de cajas.</p></div>
+          <div class="estado-txt" data-e="1"><div class="cifra">15 m²</div><h2 class="t3">Y aquí, una casa de tres dormitorios.</h2><p class="gris">Camas, roperos, sofá, bicicletas y treinta cajas. Todo ordenado.</p></div>
         </div>
-        <div class="paso" data-paso="1" data-bodega="7" data-preset="depto1">
-          <div class="cifra">7 m²</div>
-          <h2 class="t3">Un depto entero.</h2>
-          <p class="gris">Cama, refrigerador, lavadora, living, comedor y una docena de cajas. Ordenado de fondo a puerta.</p>
-        </div>
-        <div class="paso" data-paso="2" data-bodega="15" data-preset="casa3">
-          <div class="cifra">15 m²</div>
-          <h2 class="t3">Una casa de tres dormitorios.</h2>
-          <p class="gris">Camas, roperos, sofá, bicicletas y treinta cajas. Y todavía te queda espacio.</p>
-        </div>
+        <div class="avance" aria-hidden="true"><i></i><i></i></div>
       </div>
-      <div class="llenado-escena" aria-hidden="true">
-        <div class="lienzo" id="escena"></div>
-        <div class="medidas" id="medidas"></div>
+      <div class="lienzo" id="escena" aria-hidden="true"></div>
+    </div>
+  </section>
+
+  <section class="pantalla" id="tamanos">
+    <div class="wrap">
+      <div class="titulo-seccion entra"><span class="poder">Elige tu tamaño</span><h2 class="t2">Mismo fondo. Mismo alto.<br>Cambia el ancho.</h2></div>
+      <div class="cartas entra">
+        <a class="carta activa" href="/arrienda.html?bodega=7" data-carta>
+          <img src="/img/interior-7-900.jpg" alt="Interior de la bodega de 7 m², angosta y profunda, con repisa de madera" loading="lazy">
+          <div class="info"><span class="m2">7 m²</span><span class="dim">6 × 1,17 × 2,4 m</span>
+            <div class="mas-info"><div><p class="para">Para un depto de uno o dos dormitorios, o el stock de tu emprendimiento.</p><span class="valor"><span data-precio="7">$69.990</span> <small>al mes</small></span><span class="boton">Arrienda</span></div></div></div>
+        </a>
+        <a class="carta" href="/arrienda.html?bodega=15" data-carta>
+          <img src="/img/interior-15-900.jpg" alt="Interior de la bodega de 15 m² con muebles embalados, electrodomésticos y cajas" loading="lazy">
+          <div class="info"><span class="m2">15 m²</span><span class="dim">6 × 2,5 × 2,4 m</span>
+            <div class="mas-info"><div><p class="para">Para una casa de tres dormitorios, o herramientas y materiales de obra.</p><span class="valor"><span data-precio="15">$119.990</span> <small>al mes</small></span><span class="boton">Arrienda</span></div></div></div>
+        </a>
       </div>
     </div>
   </section>
 
-  <section class="seccion gris-fondo" id="bodegas">
+  <section class="pantalla" id="precio" style="background:var(--gris-claro)">
     <div class="wrap">
-      <div class="cabecera-seccion entra" style="text-align:center;align-items:center">
-        <h2 class="t2">Elige tu tamaño.</h2>
-        <p class="sub">Mismo fondo, mismo alto. Cambia el ancho.</p>
+      <div class="titulo-seccion entra"><span class="poder">Superprecio</span><h2 class="t2">Con menos plata,<br>el doble de espacio.</h2></div>
+      <div class="metros" id="metros">
+        <div class="fila-m"><div class="quien"><b>Las Condes</b><span data-lc-precio>$319.000 al mes</span><span class="m" data-lc-m>14 m²</span></div><div class="celdas" data-celdas="14"></div></div>
+        <div class="fila-m"><div class="quien"><b>Super Bodegas, Lampa</b><span data-sb-precio>$239.980 al mes · 2 bodegas</span><span class="m">30 m²</span></div><div class="celdas nuestras" data-celdas="30" data-corte="15"></div></div>
       </div>
-      <div class="modelos">
-        <article class="modelo entra">
-          <div class="modelo-foto"><img src="/img/interior-7-900.jpg" alt="Interior de la bodega de 7 m²: angosta y profunda, con repisa de madera" loading="lazy"></div>
-          <h3>7 m²</h3>
-          <p class="medida">6 × 1,17 × 2,4 m · 17 m³</p>
-          <p class="para">Para un depto de uno o dos dormitorios, o el stock de tu emprendimiento.</p>
-          <p class="valor"><span data-precio="7">$69.990</span> <span>al mes</span></p>
-          <div class="acciones"><a class="boton" href="/arrienda.html?bodega=7">Arrienda</a></div>
-        </article>
-        <article class="modelo entra">
-          <div class="modelo-foto"><img src="/img/interior-15-900.jpg" alt="Interior de la bodega de 15 m² con muebles embalados, electrodomésticos y cajas en repisas" loading="lazy"></div>
-          <h3>15 m²</h3>
-          <p class="medida">6 × 2,5 × 2,4 m · 36 m³</p>
-          <p class="para">Para una casa de tres dormitorios, o herramientas y materiales de obra.</p>
-          <p class="valor"><span data-precio="15">$119.990</span> <span>al mes</span></p>
-          <div class="acciones"><a class="boton" href="/arrienda.html?bodega=15">Arrienda</a></div>
-        </article>
+      <p class="chico" style="margin-top:28px">Cada cuadro es 1 m². Las Condes: minibodega de 14 m² publicada por una cadena en su sitio de arriendo, 12 de noviembre de 2026.</p>
+    </div>
+  </section>
+
+  <section class="foto-pantalla clara derecha" id="llegar">
+    <img src="/img/carga-auto-1600.jpg" srcset="/img/carga-auto-900.jpg 900w, /img/carga-auto-1600.jpg 1600w" sizes="100vw" alt="Un hombre descarga cajas desde su camioneta, estacionada junto a la puerta abierta de su bodega" loading="lazy">
+    <div class="velo" style="background:linear-gradient(200deg,rgb(255 255 255 / .9) 0%,rgb(255 255 255 / .5) 28%,rgb(255 255 255 / 0) 48%)"></div>
+    <div class="wrap encima">
+      <div class="titulo-seccion entra" style="margin:0"><span class="poder">Supercómodo</span><h2 class="t2">Estacionas al lado.<br>Descargas directo.</h2><p class="sub">Primer piso y calle de hormigón. Sin escaleras ni ascensor.</p></div>
+    </div>
+  </section>
+
+  <section class="foto-pantalla" id="seguridad">
+    <img src="/img/seguridad-1600.jpg" srcset="/img/seguridad-900.jpg 900w, /img/seguridad-1600.jpg 1600w" sizes="100vw" alt="Cámara de vigilancia y luminaria sobre la fila de bodegas al anochecer" loading="lazy">
+    <div class="velo" style="background:linear-gradient(180deg,rgb(0 0 0 / .55) 0%,rgb(0 0 0 / 0) 40%,rgb(0 0 0 / 0) 55%,rgb(0 0 0 / .7) 100%)"></div>
+    <div class="wrap encima">
+      <div class="titulo-seccion entra" style="margin:0"><span class="poder">Supervisión</span><h2 class="t2">Vigilada día<br>y noche.</h2></div>
+      <div class="hechos-foto entra">
+        <div><b>Vigilancia permanente</b><span>Cámaras en todo el recinto y luz toda la noche.</span></div>
+        <div><b>Acceso controlado</b><span>Solo entran las personas que arriendan.</span></div>
+        <div><b>Tu candado, tu llave</b><span>Nadie más abre tu bodega.</span></div>
       </div>
     </div>
   </section>
 
-  <section class="seccion" id="precio">
+  <section class="pantalla" id="como">
     <div class="wrap">
-      <div class="cabecera-seccion entra">
-        <h2 class="t2">Más espacio.<br>Mucho menos plata.</h2>
-        <p class="sub">Si vas a tu bodega una vez al mes, no tiene sentido pagar por tenerla en el centro.</p>
-      </div>
-      <div class="versus entra">
-        <div class="lado">
-          <span class="donde">Minibodega en Las Condes · 14 m²</span>
-          <span class="monto">$319.000</span>
-          <span class="detalle gris">al mes</span>
-        </div>
-        <div class="lado nuestro">
-          <span class="donde">Super Bodegas en Lampa · 15 m²</span>
-          <span class="monto" data-precio="15">$119.990</span>
-          <span class="detalle">al mes. <b data-ahorro>62 % menos</b>, con un metro más.</span>
-        </div>
-      </div>
-      <p class="chico conclusion">Las Condes: precio publicado por una cadena de minibodegas en su sitio de arriendo, sucursal Las Condes, 12 de noviembre de 2026.</p>
-    </div>
-  </section>
-
-  <section class="seccion gris-fondo" id="llegar">
-    <div class="wrap">
-      <div class="cabecera-seccion entra">
-        <h2 class="t2">Estacionas al lado.<br>Descargas directo.</h2>
-        <p class="sub">Todas las bodegas están en primer piso, sobre una calle de hormigón. Sin escaleras, sin ascensor, sin pasillos.</p>
-      </div>
-      <div class="foto-ancha entra"><img src="/img/carga-auto-1600.jpg" srcset="/img/carga-auto-900.jpg 900w, /img/carga-auto-1600.jpg 1600w" sizes="(max-width: 1200px) 100vw, 1120px" alt="Un hombre descarga cajas con un carro desde su camioneta, estacionada junto a la puerta abierta de su bodega" loading="lazy"></div>
-    </div>
-  </section>
-
-  <section class="seccion" id="seguridad">
-    <div class="wrap">
-      <div class="cabecera-seccion entra">
-        <h2 class="t2">Cuidada de día<br>y de noche.</h2>
-      </div>
-      <div class="foto-ancha entra" style="margin-top:0"><img src="/img/seguridad-1600.jpg" srcset="/img/seguridad-900.jpg 900w, /img/seguridad-1600.jpg 1600w" sizes="(max-width: 1200px) 100vw, 1120px" alt="Cámara de vigilancia y luminaria sobre la fila de bodegas al anochecer" loading="lazy"></div>
-      <div class="tres entra">
-        <div><b>Vigilancia permanente</b><p>Cámaras en todo el recinto y luz toda la noche.</p></div>
-        <div><b>Acceso controlado</b><p>Solo entran las personas que arriendan.</p></div>
-        <div><b>Tu candado, tu llave</b><p>Nadie más abre tu bodega.</p></div>
+      <div class="titulo-seccion entra"><span class="poder">Supervelocidad</span><h2 class="t2">Arriendas en tres minutos.</h2></div>
+      <div class="pasos3 entra">
+        <div><span class="tiempo">3 min</span><b>Eliges tu bodega en línea.</b><p>Tamaño, plazo y desde cuándo. Ves el precio al tiro.</p></div>
+        <div><span class="tiempo">Hoy</span><b>Te escribimos por WhatsApp.</b><p>Confirmamos la bodega y firmas desde el celular.</p></div>
+        <div><span class="tiempo">Listo</span><b>Llegas con tus cosas.</b><p>O pasamos a buscarlas: gratis si arriendas 3 meses o más.</p></div>
       </div>
     </div>
   </section>
 
-  <section class="seccion gris-fondo" id="como">
-    <div class="wrap">
-      <div class="cabecera-seccion entra"><h2 class="t2">Arrendar toma<br>tres minutos.</h2></div>
-      <div class="frases entra">
-        <p>Eliges tu bodega en línea.<span>Tamaño, plazo y fecha.</span></p>
-        <p>Te escribimos por WhatsApp.<span>Confirmamos y firmas desde el celular.</span></p>
-        <p>Llegas con tus cosas.<span>O pasamos a buscarlas por ti.</span></p>
-      </div>
+  <section class="mapa-pantalla" id="ubicacion">
+    <div id="mapa" aria-label="Mapa de Lampa con la ubicación de Super Bodegas"></div>
+    <div class="tarjeta-mapa entra">
+      <span class="poder">Ubicación</span>
+      <h2 class="t3">En Lampa, al norte de Santiago.</h2>
+      <p class="gris">Cerca de Colina, Chicureo, Quilicura, Batuco y Pudahuel. De lunes a sábado, de 8:00 a 20:00.</p>
+      <a class="enlace" href="https://wa.me/56964138832?text=Hola%2C%20quiero%20visitar%20las%20bodegas%20de%20Lampa" target="_blank" rel="noopener">Agenda una visita</a>
     </div>
   </section>
 
-  <section class="seccion" id="ubicacion">
-    <div class="wrap">
-      <div class="cabecera-seccion entra">
-        <h2 class="t2">En Lampa, al norte<br>de Santiago.</h2>
-        <p class="sub">Cerca de Colina, Chicureo, Quilicura, Batuco y Pudahuel. Ven a conocerlas antes de arrendar.</p>
-        <div class="acciones"><a class="enlace" href="https://wa.me/56964138832?text=Hola%2C%20quiero%20visitar%20las%20bodegas%20de%20Lampa" target="_blank" rel="noopener">Agenda una visita por WhatsApp</a></div>
-      </div>
-      <div class="mapa-caja entra"><div id="mapa" aria-label="Mapa de Lampa con la ubicación de Super Bodegas"></div></div>
-    </div>
-  </section>
-
-  <section class="seccion gris-fondo" id="preguntas">
-    <div class="wrap">
-      <div class="cabecera-seccion entra"><h2 class="t2">Preguntas frecuentes.</h2></div>
+  <section class="pantalla" id="preguntas" style="background:var(--gris-claro)">
+    <div class="wrap preg-grid">
+      <div class="titulo-seccion entra"><span class="poder">Preguntas</span><h2 class="t2">Lo que nos preguntan.</h2><p class="gris">¿Otra duda? <a class="enlace" href="https://wa.me/56964138832" target="_blank" rel="noopener">Escríbenos</a></p></div>
       <div class="preguntas">
-        <details><summary>¿Qué necesito para arrendar?</summary><p>Tu nombre, celular y correo. Haces la solicitud en línea y te escribimos por WhatsApp para confirmar la bodega y enviarte el contrato.</p></details>
-        <details><summary>¿Hay un plazo mínimo?</summary><p>No. Arriendas mes a mes y avisas con 15 días cuando te vayas. Si arriendas 6 meses pagas 5, y si arriendas 12 pagas 10.</p></details>
+        <details><summary>¿Qué necesito para arrendar?</summary><p>Tu nombre, celular y correo. Haces la solicitud en línea y te escribimos por WhatsApp para confirmar y enviarte el contrato.</p></details>
+        <details><summary>¿Hay un plazo mínimo?</summary><p>No. Arriendas mes a mes y avisas con 15 días. Si arriendas 6 meses pagas 5, y si arriendas 12 pagas 10.</p></details>
         <details><summary>¿Piden mes de garantía?</summary><p>No.</p></details>
         <details><summary>¿Cuándo puedo ir?</summary><p>De lunes a sábado, de 8:00 a 20:00, todas las veces que quieras.</p></details>
         <details><summary>¿Qué no se puede guardar?</summary><p>Cosas inflamables, explosivas o peligrosas, alimentos que se echan a perder, animales y armas.</p></details>
-        <details><summary>¿Cómo funciona el retiro a domicilio?</summary><p>Si arriendas 3 meses o más, pasamos a buscar tus cosas gratis en Lampa, Colina, Chicureo, Quilicura, Batuco y Pudahuel. Para otras comunas te cotizamos el flete.</p></details>
-        <details><summary>¿Me puedo cambiar de tamaño?</summary><p>Sí. Te pasamos de 7 a 15 m² en el mismo recinto, según disponibilidad.</p></details>
+        <details><summary>¿Cómo funciona el retiro a domicilio?</summary><p>Si arriendas 3 meses o más, pasamos a buscar tus cosas gratis en Lampa, Colina, Chicureo, Quilicura, Batuco y Pudahuel.</p></details>
       </div>
     </div>
   </section>
 
-  <section class="seccion cierre">
+  <section class="pantalla cierre">
     <div class="wrap">
+      <img class="mascota" src="/marca/mascota.png" alt="" width="180" height="120">
       <h2 class="t1 entra">Tu bodega te espera.</h2>
-      <div class="acciones entra"><a class="boton" href="/arrienda.html">Arrienda</a><a class="enlace" href="https://wa.me/56964138832" target="_blank" rel="noopener">Escríbenos por WhatsApp</a></div>
+      <div class="acciones entra" style="justify-content:center"><a class="boton" href="/arrienda.html">Arrienda</a><a class="enlace" href="https://wa.me/56964138832" target="_blank" rel="noopener">Escríbenos por WhatsApp</a></div>
     </div>
   </section>
 
