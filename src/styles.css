@@ -526,3 +526,7 @@ p { margin: 0; }
   .pasos-masc b { padding: 14px 12px 4px 0; font-size: 16px; }
   .pasos-masc p { padding: 0 12px 12px 0; font-size: 13px; line-height: 1.35; }
 }
+
+/* cartas: solo la que tiene el cursor se agranda */
+.cartas .carta, .cartas .carta.activa { flex-grow: 1; transition: flex-grow .7s cubic-bezier(.2, .8, .2, 1), box-shadow .5s; transform: none !important; }
+@media (hover: hover) and (min-width: 761px) { .cartas .carta:hover, .cartas .carta:focus-visible { flex-grow: 1.7; } }

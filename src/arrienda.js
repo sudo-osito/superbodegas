@@ -186,7 +186,6 @@ $('#form').addEventListener('submit', async (ev) => {
     $('#aviso-vista').hidden = !j.vista;
     $('#listo-titulo').textContent = `Listo, ${d.nombre.split(' ')[0]}.`;
     $('#listo-texto').textContent = `Tu bodega de ${st.bodega} m² está en buenas manos. Te escribimos por WhatsApp ${NEGOCIO.respuesta} para confirmar.`;
-    $('#listo-wa').href = `https://wa.me/${NEGOCIO.whatsapp.replace('+', '')}?text=${encodeURIComponent(`Hola, envié la solicitud ${j.codigo} para la bodega de ${st.bodega} m².`)}`;
     scrollTo({ top: 0 });
   } catch { eg.textContent = 'No pudimos enviar tu solicitud. Revisa tu conexión o escríbenos por WhatsApp.'; }
   finally { bt.disabled = false; barraTotal(); }

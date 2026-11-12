@@ -5,9 +5,9 @@ export const NEGOCIO = {
   zona: 'Lampa, al norte de Santiago',
   direccion: null, // confirmar: dirección exacta de la sede
   mapa: { lat: -33.2857, lng: -70.8775, zoom: 12 }, // centro de Lampa; mover al punto real
-  whatsapp: '+56964138832', // tomado del aviso «RentaBodegasStgo»; confirmar
-  whatsappTexto: '+56 9 6413 8832',
-  horario: 'Lunes a sábado, 8:00 a 20:00', // confirmar: es el horario de Pudahuel
+  whatsapp: '+56968354628', // número oficial de Super Bodegas (Max, 12-nov)
+  whatsappTexto: '+56 9 6835 4628',
+  horario: 'Acceso 24 horas, todos los días', // Max, 12-nov
   respuesta: 'el mismo día hábil', // promesa de contacto tras la solicitud
 };
 
