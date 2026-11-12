@@ -32,7 +32,7 @@ export const PLAZOS = [
   { id: 1, nombre: 'Mes a mes', meses: 1, paga: 1, nota: 'Te vas cuando quieras, avisando con 15 días' },
   { id: 3, nombre: '3 meses', meses: 3, paga: 3, nota: 'Incluye retiro gratis a domicilio' },
   { id: 6, nombre: '6 meses', meses: 6, paga: 5, nota: 'Pagas 5, guardas 6' },
-  { id: 12, nombre: '12 meses', meses: 12, paga: 10, nota: 'Pagas 10, guardas 12' },
+  { id: 12, nombre: '12 meses', meses: 12, paga: 9, nota: 'Pagas 9, guardas 12' }, // confirmar
 ];
 
 export const PROMO = {

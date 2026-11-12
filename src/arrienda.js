@@ -101,15 +101,41 @@ function barraTotal() {
 }
 function refrescar() { pintar3d(); pintarOpciones(); barraTotal(); }
 function irFase(n) {
+  setTimeout(guardarBorrador, 0);
   st.fase = Math.max(0, Math.min(FASES - 1, n));
   $$('.fase').forEach((f) => f.classList.toggle('activa', Number(f.dataset.fase) === st.fase));
   $$('.pasos-i i').forEach((i, k) => i.classList.toggle('on', k <= st.fase));
   $('#prog-txt').textContent = `${st.fase + 1} de ${FASES}`;
   barraTotal(); $('#error-general').textContent = '';
-  const h = $('.fase.activa h1'); h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true });
+  const h = $('.fase.activa h1'); h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true }); escribir(h);
   if (innerWidth < 960) scrollTo({ top: 0, behavior: 'smooth' });
 }
 $('#atras').addEventListener('click', () => irFase(st.fase - 1));
+
+// cada pregunta se escribe letra a letra (máx. ~1 s), como el registro de la feria
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches; let turno = 0;
+function escribir(h) {
+  if (!h.dataset.texto) h.dataset.texto = h.textContent; const t = h.dataset.texto; const yo = ++turno;
+  if (reduce) { h.textContent = t; return; }
+  const paso = Math.max(14, Math.min(40, 1000 / t.length)); h.textContent = ''; h.classList.add('tipeando'); let i = 0;
+  const tic = () => { if (yo !== turno) return; h.textContent = t.slice(0, ++i); if (i < t.length) setTimeout(tic, paso); else setTimeout(() => h.classList.remove('tipeando'), 900); };
+  tic();
+}
+
+// borrador: lo escrito nunca se pierde por recargar (se borra al enviar)
+const CLAVE = 'superbodegas_borrador';
+function guardarBorrador() { try { const d = datos(); delete d.empresa_web; localStorage.setItem(CLAVE, JSON.stringify({ ...d, fase: st.fase, preset: st.preset, manual: st.manual })); } catch {} }
+function leerBorrador() {
+  try {
+    const b = JSON.parse(localStorage.getItem(CLAVE) || 'null'); if (!b || q.get('bodega') || q.get('preset')) return;
+    for (const k of ['nombre', 'telefono', 'email', 'rut', 'comuna', 'comentario', 'direccionRetiro']) if (b[k]) $('#' + k).value = b[k];
+    if (b.inicio && b.inicio >= $('#inicio').min && b.inicio <= $('#inicio').max) $('#inicio').value = b.inicio;
+    Object.assign(st, { bodega: BODEGAS[b.bodega] ? b.bodega : st.bodega, plazo: b.plazo || st.plazo, retiro: !!b.retiro, items: b.items || {}, preset: b.preset ?? null, manual: !!b.manual });
+    $('input[name=traslado][value=' + (st.retiro ? 'retiro' : 'yo') + ']').checked = true; $('#c-direccionRetiro').hidden = !st.retiro;
+    return b.fase || 0;
+  } catch { return 0; }
+}
+$('#form').addEventListener('input', guardarBorrador); $('#form').addEventListener('change', guardarBorrador);
 
 // ---------- validación y envío ----------
 function err(id, m) { const c = $('#c-' + id); if (!c) return; c.classList.toggle('mal', !!m); c.querySelector('.error').textContent = m || ''; }
@@ -152,6 +178,7 @@ $('#form').addEventListener('submit', async (ev) => {
     const r = await fetch('/api/solicitud', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(d) });
     const j = await r.json().catch(() => ({}));
     if (!r.ok || !j.ok) { const e2 = j.errores || {}; Object.entries(e2).forEach(([k, m]) => err(k, m)); eg.textContent = e2.general || 'Revisa los datos marcados.'; return; }
+    try { localStorage.removeItem(CLAVE); } catch {}
     $('#arr').hidden = true; $('#total').hidden = true; $('#listo').hidden = false;
     $('#codigo').textContent = j.codigo;
     $('#listo-titulo').textContent = `Listo, ${d.nombre.split(' ')[0]}.`;
@@ -163,4 +190,5 @@ $('#form').addEventListener('submit', async (ev) => {
 });
 
 // arranque: si viene con tamaño elegido desde el inicio, igual parte preguntando qué guardas
-cambioObjetos(); irFase(0);
+const faseGuardada = leerBorrador() || 0;
+cambioObjetos(); irFase(Math.min(faseGuardada, 3));
