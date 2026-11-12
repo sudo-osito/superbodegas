@@ -1,0 +1,7 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;height:100%;background:#fff}#a{width:100vw;height:100vh}</style></head><body><div id="a"></div>
+<script type="module">
+import { crearBodega } from '/src/bodega3d.js'; import { BODEGAS } from '/src/config.js'; import { PRESETS } from '/src/items.js';
+const q=new URLSearchParams(location.search); const id=+(q.get('b')||15);
+const b=crearBodega(document.getElementById('a'),{girar:false});
+b.setItems(PRESETS[q.get('p')||'casa3'].items); b.setBodega(id,BODEGAS[id]); b.mostrar(+(q.get('n')||999));
+</script></body></html>

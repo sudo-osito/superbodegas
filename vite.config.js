@@ -30,6 +30,6 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, __dirname, 'TELEGRAM_');
   return {
     plugins: [parciales(), api(env)],
-    build: { rollupOptions: { input: { index: resolve(__dirname, 'index.html'), cotizar: resolve(__dirname, 'cotizar.html') } } },
+    build: { rollupOptions: { input: { index: resolve(__dirname, 'index.html'), arrienda: resolve(__dirname, 'arrienda.html') } } },
   };
 });

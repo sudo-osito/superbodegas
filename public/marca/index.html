@@ -1,0 +1,20 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Super Bodegas · Logo</title>
+<style>
+body{margin:0;font:15px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,sans-serif;color:#1d1d1f;background:#fff}
+.w{max-width:1200px;margin:0 auto;padding:48px}
+h1{font:600 40px/1.1 -apple-system,"SF Pro Display",sans-serif;letter-spacing:-.02em;margin:0 0 8px}
+.op{display:grid;grid-template-columns:200px 1fr;gap:32px;align-items:center;padding:40px 0;border-top:1px solid #e5e5ea}
+.op h2{font:600 21px -apple-system,sans-serif;margin:0}.op p{color:#6e6e73;margin:6px 0 0}
+.fila{display:flex;gap:40px;align-items:center;flex-wrap:wrap}
+.lock img{height:44px}.lock.g img{height:72px}
+.osc{background:#1d1d1f;padding:22px 28px;border-radius:14px}
+.ico{display:flex;gap:18px;align-items:flex-end}.ico img{display:block}
+</style></head><body><div class="w">
+<h1>Super Bodegas · logo</h1><p style="color:#6e6e73">Letras: SF Pro Display Bold (la de Optimizo), convertidas a curvas. Símbolo en retícula de 24, squircle tipo ícono Apple.</p>
+<div id="ops"></div></div>
+<script>
+const ops=[['abierta','Abierta (recomendada)','Las dos hojas abiertas hacia afuera y el interior lleno de luz: la bodega lista para ti.'],['fondo','Fondo','Miras dentro de la bodega: seis metros de fondo. «Espacio de sobra».'],['puerta','Puerta doble','El frente real de nuestras bodegas: dos hojas y sus manillas.']];
+document.getElementById('ops').innerHTML=ops.map(([k,n,t])=>`<div class="op"><div><h2>${n}</h2><p>${t}</p></div><div style="display:flex;flex-direction:column;gap:24px">
+<div class="fila"><span class="lock g"><img src="logo-${k}.svg"></span><span class="lock osc"><img src="logo-${k}-blanco.svg"></span></div>
+<div class="ico">${[16,24,32,48,64,128].map(s=>`<img src="marca-${k}.svg" width="${s}" height="${s}">`).join('')}</div></div></div>`).join('');
+</script></body></html>

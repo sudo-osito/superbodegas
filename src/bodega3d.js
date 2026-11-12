@@ -1,310 +1,298 @@
-// La bodega en 3D: módulo con medidas reales, repisa de madera, objetos que caen como Tetris.
+// La bodega en 3D, estilo maqueta blanca (arcilla): solo piso y las dos murallas largas, puertas abiertas hacia afuera,
+// objetos a escala real que caen en orden de fondo a puerta. Render a pedido (solo cuando algo se mueve).
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { GTAOPass } from 'three/examples/jsm/postprocessing/GTAOPass.js';
+import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { ITEMS } from './items.js';
 import { empacar, expandir } from './pack.js';
 
-const C = {
-  panel: 0xf4f4f1, frame: 0x45494d, piso: 0xc9cac5, suelo: 0xefefea,
-  pino: 0xd9b98c, pinoOsc: 0xc39f6c, carton: 0xc79f74, carton2: 0xb58c62, cinta: 0xe2c79c,
-  film: 0xdfe4e8, blanco: 0xf3f3f1, grafito: 0x3a3d40, negro: 0x1b1c1e, naranja: 0xff5f15, tela: 0x8b95a1,
-};
 export const REPISA = { fondo: 0.45, largo: 4.2, niveles: [{ y: 0.12, libre: 0.76 }, { y: 0.96, libre: 0.76 }, { y: 1.8, libre: 0.55 }] };
 const reduce = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-const mats = {};
-function mat(color, extra = {}) {
-  const k = color + JSON.stringify(extra);
-  if (!mats[k]) mats[k] = new THREE.MeshStandardMaterial({ color, roughness: 0.82, metalness: 0, ...extra });
-  return mats[k];
+// Tres blancos y un gris: la forma se lee por luz y sombra, no por color.
+const T = { muro: 0xefefec, piso: 0xd9d9d4, a: 0xf6f6f4, b: 0xe7e7e3, c: 0xd6d6d1, d: 0xb8b8b2, marco: 0xb5b5af, acento: 0xff5b14 };
+const cacheMat = new Map();
+function mat(c, o = {}) {
+  const k = c + JSON.stringify(o);
+  if (!cacheMat.has(k)) cacheMat.set(k, new THREE.MeshStandardMaterial({ color: c, roughness: 0.78, metalness: 0, envMapIntensity: 0.9, ...o }));
+  return cacheMat.get(k);
 }
-function caja(w, h, d, color, x = 0, y = 0, z = 0, r = 0.012) {
-  const g = r > 0 ? new RoundedBoxGeometry(w, h, d, 2, Math.min(r, w / 3, h / 3, d / 3)) : new THREE.BoxGeometry(w, h, d);
-  const m = new THREE.Mesh(g, typeof color === 'number' ? mat(color) : color);
-  m.position.set(x, y + h / 2, z); m.castShadow = true; m.receiveShadow = true; return m;
+const cacheGeo = new Map();
+function rbox(w, h, d, r) {
+  r = Math.min(r, w / 2.01, h / 2.01, d / 2.01);
+  const k = [w, h, d, r].map((v) => v.toFixed(3)).join('|');
+  if (!cacheGeo.has(k)) cacheGeo.set(k, r > 0.002 ? new RoundedBoxGeometry(w, h, d, 3, r) : new THREE.BoxGeometry(w, h, d));
+  return cacheGeo.get(k);
+}
+function pieza(g, w, h, d, color, x = 0, y = 0, z = 0, r = 0.02) {
+  const m = new THREE.Mesh(rbox(w, h, d, r), mat(color));
+  m.position.set(x, y + h / 2, z); m.castShadow = true; m.receiveShadow = true; g.add(m); return m;
+}
+function cilindro(g, r, len, color, eje, x, y, z, seg = 24) {
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, seg), mat(color));
+  if (eje === 'x') m.rotation.z = Math.PI / 2; if (eje === 'z') m.rotation.x = Math.PI / 2;
+  m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true; g.add(m); return m;
+}
+function aro(g, r, t, color, x, y, z) {
+  const m = new THREE.Mesh(new THREE.TorusGeometry(r, t, 12, 40), mat(color)); m.position.set(x, y, z); m.castShadow = true; g.add(m); return m;
 }
 
-// ---------- objetos ----------
-function modelo(tipo) {
-  const it = ITEMS[tipo]; const { w, d, h } = it; const g = new THREE.Group();
-  const add = (...a) => { const m = caja(...a); g.add(m); return m; };
+// ---------- objetos (origen: centro de la base) ----------
+export function modelo(tipo) {
+  const { w, d, h } = ITEMS[tipo]; const g = new THREE.Group(); const P = (...a) => pieza(g, ...a);
   switch (tipo) {
     case 'caja_m': case 'caja_g': {
-      add(w, h, d, tipo === 'caja_m' ? C.carton : C.carton2);
-      add(w * 0.18, 0.004, d + 0.002, C.cinta, 0, h - 0.002, 0, 0);
+      P(w, h, d, tipo === 'caja_m' ? T.b : T.a, 0, 0, 0, 0.012);
+      P(w + 0.002, 0.003, 0.004, T.d, 0, h - 0.002, 0, 0);
+      P(w * 0.22, 0.004, d + 0.004, T.c, 0, h - 0.003, 0, 0);
       break;
     }
-    case 'maleta': add(w, h, d, C.grafito, 0, 0, 0, 0.05); add(0.16, 0.05, 0.03, C.negro, 0, h, 0, 0.01); break;
+    case 'maleta':
+      P(w, h * 0.94, d, T.c, 0, 0, 0, 0.06);
+      P(0.03, 0.08, 0.03, T.d, -0.08, h * 0.94, 0, 0.01); P(0.03, 0.08, 0.03, T.d, 0.08, h * 0.94, 0, 0.01); P(0.2, 0.025, 0.03, T.d, 0, h, 0, 0.012);
+      break;
     case 'cama2': case 'cama1':
-      add(w, h, d * 0.55, C.film, 0, 0, -d * 0.22, 0.05); add(w, h * 0.96, d * 0.42, C.tela, 0, 0, d * 0.28, 0.02); break;
+      P(w, h, d * 0.55, T.a, 0, 0, -d * 0.2, 0.07);
+      P(w * 0.98, h * 0.94, d * 0.32, T.c, 0, 0, d * 0.3, 0.02);
+      break;
     case 'ropero':
-      add(w, h, d, C.pino); add(0.006, h * 0.9, 0.004, C.pinoOsc, 0, h * 0.05, d / 2, 0);
-      add(0.02, 0.18, 0.02, C.grafito, -0.05, h * 0.5, d / 2 + 0.01, 0); add(0.02, 0.18, 0.02, C.grafito, 0.05, h * 0.5, d / 2 + 0.01, 0); break;
+      P(w, h, d, T.a, 0, 0, 0, 0.012);
+      P(0.004, h * 0.92, 0.006, T.d, 0, h * 0.04, d / 2, 0);
+      P(0.018, 0.22, 0.02, T.d, -0.045, h * 0.5, d / 2 + 0.01, 0.008); P(0.018, 0.22, 0.02, T.d, 0.045, h * 0.5, d / 2 + 0.01, 0.008);
+      P(w, 0.06, d * 0.96, T.c, 0, 0, 0, 0.01);
+      break;
     case 'comoda':
-      add(w, h, d, C.pino); for (let i = 1; i < 3; i++) add(w * 0.92, 0.006, 0.004, C.pinoOsc, 0, (h / 3) * i, d / 2, 0); break;
+      P(w, h, d, T.a, 0, 0, 0, 0.012);
+      for (let i = 0; i < 3; i++) { P(w * 0.9, h / 3 - 0.04, 0.01, T.b, 0, 0.03 + i * (h / 3), d / 2, 0.008); P(0.12, 0.016, 0.02, T.d, 0, 0.03 + i * (h / 3) + h / 6 - 0.03, d / 2 + 0.01, 0.006); }
+      break;
     case 'sofa3': case 'sillon': {
-      const f = mat(C.film, { roughness: 0.35, transparent: true, opacity: 0.93 });
-      add(w, h * 0.45, d, f, 0, 0, 0, 0.06); add(w, h * 0.55, d * 0.28, f, 0, h * 0.45, -d * 0.36, 0.06);
-      add(w * 0.12, h * 0.25, d, f, -w * 0.44, h * 0.45, 0, 0.05); add(w * 0.12, h * 0.25, d, f, w * 0.44, h * 0.45, 0, 0.05); break;
+      const n = tipo === 'sofa3' ? 3 : 1, brazo = 0.16, cw = (w - brazo * 2) / n;
+      P(w, 0.22, d, T.c, 0, 0.04, 0, 0.05);
+      for (let i = 0; i < n; i++) {
+        const x = -w / 2 + brazo + cw * (i + 0.5);
+        P(cw - 0.015, 0.16, d - 0.24, T.a, x, 0.26, 0.08, 0.06);
+        P(cw - 0.015, 0.42, 0.2, T.a, x, 0.36, -d / 2 + 0.2, 0.08);
+      }
+      P(w, 0.62, 0.16, T.b, 0, 0.18, -d / 2 + 0.08, 0.06);
+      P(brazo, 0.42, d, T.b, -w / 2 + brazo / 2, 0.18, 0, 0.07); P(brazo, 0.42, d, T.b, w / 2 - brazo / 2, 0.18, 0, 0.07);
+      for (const sx of [-1, 1]) for (const sz of [-1, 1]) P(0.04, 0.05, 0.04, T.d, sx * (w / 2 - 0.08), 0, sz * (d / 2 - 0.08), 0.01);
+      break;
     }
-    case 'tv': add(w, h, d, C.carton2); add(w * 0.7, h * 0.5, 0.002, C.cinta, 0, h * 0.25, d / 2, 0); break;
+    case 'tv':
+      P(w, h, d, T.b, 0, 0, 0, 0.012); P(w * 0.7, h * 0.55, 0.004, T.a, 0, h * 0.22, d / 2, 0.004);
+      break;
     case 'mesa': case 'escritorio':
-      add(w, 0.04, d, C.pino, 0, h - 0.04, 0, 0.01);
-      for (const sx of [-1, 1]) for (const sz of [-1, 1]) add(0.05, h - 0.04, 0.05, C.pinoOsc, sx * (w / 2 - 0.06), 0, sz * (d / 2 - 0.06), 0);
+      P(w, 0.035, d, T.a, 0, h - 0.035, 0, 0.012);
+      P(w - 0.12, 0.08, d - 0.12, T.b, 0, h - 0.115, 0, 0.005);
+      for (const sx of [-1, 1]) for (const sz of [-1, 1]) P(0.045, h - 0.035, 0.045, T.b, sx * (w / 2 - 0.07), 0, sz * (d / 2 - 0.07), 0.012);
       break;
     case 'silla':
-      add(w, 0.04, d * 0.9, C.pino, 0, 0.45, 0.02, 0.01); add(w, 0.42, 0.04, C.pino, 0, 0.48, -d / 2 + 0.03, 0.01);
-      for (const sx of [-1, 1]) for (const sz of [-1, 1]) add(0.035, 0.45, 0.035, C.pinoOsc, sx * (w / 2 - 0.04), 0, sz * (d / 2 - 0.06), 0);
+      P(w, 0.04, d * 0.92, T.a, 0, 0.44, 0.02, 0.015);
+      P(w, 0.36, 0.035, T.a, 0, 0.52, -d / 2 + 0.03, 0.015);
+      for (const sx of [-1, 1]) for (const sz of [-1, 1]) P(0.032, 0.44, 0.032, T.b, sx * (w / 2 - 0.035), 0, sz * (d / 2 - 0.05), 0.01);
+      for (const sx of [-1, 1]) P(0.032, 0.5, 0.032, T.b, sx * (w / 2 - 0.035), 0.44, -d / 2 + 0.03, 0.01);
       break;
     case 'refri':
-      add(w, h, d, C.blanco, 0, 0, 0, 0.04); add(w * 0.96, 0.006, 0.004, 0xd5d5d2, 0, h * 0.62, d / 2, 0);
-      add(0.025, 0.3, 0.03, C.grafito, w * 0.38, h * 0.68, d / 2 + 0.015, 0.008); break;
-    case 'lavadora': case 'cocina': {
-      add(w, h, d, C.blanco, 0, 0, 0, 0.03);
-      const o = new THREE.Mesh(new THREE.CylinderGeometry(w * 0.3, w * 0.3, 0.02, 32), mat(tipo === 'lavadora' ? C.grafito : C.negro));
-      o.rotation.x = Math.PI / 2; o.position.set(0, h * 0.45, d / 2 + 0.005); g.add(o);
+      P(w, h, d, T.a, 0, 0, 0, 0.05);
+      P(w * 0.98, 0.006, 0.006, T.d, 0, h * 0.64, d / 2, 0);
+      P(0.022, 0.32, 0.03, T.d, w * 0.36, h * 0.7, d / 2 + 0.015, 0.01); P(0.022, 0.42, 0.03, T.d, w * 0.36, h * 0.24, d / 2 + 0.015, 0.01);
       break;
-    }
+    case 'lavadora': case 'cocina':
+      P(w, h, d, T.a, 0, 0, 0, 0.035);
+      P(w * 0.98, 0.1, 0.01, T.b, 0, h - 0.13, d / 2, 0.006);
+      if (tipo === 'lavadora') { aro(g, w * 0.27, 0.025, T.c, 0, h * 0.44, d / 2 + 0.01); cilindro(g, w * 0.24, 0.01, T.d, 'z', 0, h * 0.44, d / 2 + 0.002, 32); }
+      else { P(w * 0.8, h * 0.45, 0.01, T.c, 0, h * 0.12, d / 2, 0.01); for (let i = 0; i < 4; i++) cilindro(g, 0.07, 0.012, T.c, 'y', (i % 2 ? 0.13 : -0.13), h + 0.006, (i < 2 ? -0.13 : 0.13), 20); }
+      break;
     case 'bici': {
-      const r = 0.34, tm = mat(C.negro);
-      for (const sx of [-1, 1]) {
-        const t = new THREE.Mesh(new THREE.TorusGeometry(r, 0.025, 10, 32), tm); t.position.set(sx * 0.55, r + 0.02, 0); t.castShadow = true; g.add(t);
-      }
-      const fr = mat(C.naranja, { roughness: 0.4 });
-      const tubo = (x1, y1, x2, y2) => {
-        const len = Math.hypot(x2 - x1, y2 - y1); const m = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, len, 8), fr);
-        m.position.set((x1 + x2) / 2, (y1 + y2) / 2, 0); m.rotation.z = Math.atan2(y2 - y1, x2 - x1) - Math.PI / 2; m.castShadow = true; g.add(m);
-      };
-      tubo(-0.55, r, -0.05, r); tubo(-0.05, r, 0.3, 0.78); tubo(-0.55, r, -0.15, 0.75); tubo(-0.15, 0.75, 0.3, 0.78); tubo(0.3, 0.78, 0.55, r); tubo(-0.15, 0.75, -0.05, r);
-      add(0.22, 0.04, 0.08, C.negro, -0.17, 0.78, 0, 0.01); add(0.04, 0.04, 0.5, C.negro, 0.32, 0.86, 0, 0.01);
+      const r = 0.34, tubo = (x1, y1, x2, y2, t = 0.017) => { const len = Math.hypot(x2 - x1, y2 - y1); const m = new THREE.Mesh(new THREE.CylinderGeometry(t, t, len, 10), mat(T.c)); m.position.set((x1 + x2) / 2, (y1 + y2) / 2, 0); m.rotation.z = Math.atan2(y2 - y1, x2 - x1) - Math.PI / 2; m.castShadow = true; g.add(m); };
+      for (const sx of [-0.55, 0.55]) { aro(g, r, 0.022, T.d, sx, r + 0.02, 0); cilindro(g, 0.03, 0.06, T.d, 'z', sx, r + 0.02, 0, 12); }
+      tubo(-0.55, r, -0.05, r); tubo(-0.05, r, 0.3, 0.8); tubo(-0.55, r, -0.15, 0.76); tubo(-0.15, 0.76, 0.3, 0.8); tubo(0.3, 0.8, 0.55, r); tubo(-0.15, 0.76, -0.05, r);
+      pieza(g, 0.22, 0.04, 0.08, T.d, -0.18, 0.8, 0, 0.02); pieza(g, 0.04, 0.03, 0.5, T.d, 0.33, 0.9, 0, 0.012);
       break;
     }
     case 'herramientas':
-      add(w, h, d, C.grafito, 0, 0, 0, 0.02); for (let i = 1; i < 5; i++) add(w * 0.9, 0.006, 0.004, C.negro, 0, (h / 5) * i, d / 2, 0);
-      add(w * 0.5, 0.03, 0.03, C.naranja, 0, h * 0.85, d / 2 + 0.015, 0.008); break;
-    case 'pallet': {
-      add(w, 0.14, d, C.pinoOsc, 0, 0, 0, 0.005);
-      const cols = 3, rows = 2, bw = w / cols, bd = d / rows;
-      for (let l = 0; l < 3; l++) for (let i = 0; i < cols; i++) for (let j = 0; j < rows; j++)
-        add(bw - 0.02, 0.33, bd - 0.02, (i + j + l) % 2 ? C.carton : C.carton2, -w / 2 + bw * (i + 0.5), 0.14 + l * 0.35, -d / 2 + bd * (j + 0.5), 0.01);
+      P(w, h - 0.06, d, T.b, 0, 0.06, 0, 0.02);
+      for (let i = 0; i < 5; i++) { P(w * 0.92, (h - 0.1) / 5 - 0.02, 0.01, T.a, 0, 0.08 + i * ((h - 0.1) / 5), d / 2, 0.006); P(w * 0.5, 0.014, 0.02, T.d, 0, 0.08 + i * ((h - 0.1) / 5) + 0.07, d / 2 + 0.01, 0.006); }
+      for (const sx of [-1, 1]) for (const sz of [-1, 1]) cilindro(g, 0.03, 0.03, T.d, 'x', sx * (w / 2 - 0.06), 0.03, sz * (d / 2 - 0.06), 14);
       break;
-    }
+    case 'pallet':
+      P(w, 0.03, d, T.c, 0, 0.11, 0, 0.004);
+      for (const sx of [-1, 0, 1]) P(0.1, 0.1, d, T.d, sx * (w / 2 - 0.06), 0.0, 0, 0.004);
+      P(w - 0.02, h - 0.16, d - 0.02, T.a, 0, 0.14, 0, 0.03);
+      for (let i = 1; i < 3; i++) P(w + 0.002, 0.004, d + 0.002, T.c, 0, 0.14 + i * (h - 0.16) / 3, 0, 0);
+      break;
     case 'materiales':
-      for (let i = 0; i < 3; i++) for (let j = 0; j < 2; j++) {
-        const m = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, w, 12), mat(0xa9adb1, { metalness: 0.6, roughness: 0.35 }));
-        m.rotation.z = Math.PI / 2; m.position.set(0, 0.07 + j * 0.13, -d / 2 + 0.08 + i * 0.145); m.castShadow = true; g.add(m);
-      }
+      for (let i = 0; i < 3; i++) for (let j = 0; j < 2; j++) cilindro(g, 0.055, w, j ? T.b : T.c, 'x', 0, 0.06 + j * 0.12, -d / 2 + 0.08 + i * 0.145, 16);
+      P(0.05, 0.27, d * 0.9, T.d, -w / 2 + 0.3, 0, 0, 0.01); P(0.05, 0.27, d * 0.9, T.d, w / 2 - 0.3, 0, 0, 0.01);
       break;
-    default: add(w, h, d, C.carton);
+    default: P(w, h, d, T.a);
   }
   return g;
 }
 
-// ---------- vehículos y escala ----------
-function persona() {
-  const g = new THREE.Group(); const m = mat(0x2b2d30);
-  const cuerpo = new THREE.Mesh(new THREE.CapsuleGeometry(0.19, 0.95, 6, 16), m); cuerpo.position.y = 0.19 + 0.475 + 0.08; cuerpo.castShadow = true;
-  const cab = new THREE.Mesh(new THREE.SphereGeometry(0.12, 20, 16), m); cab.position.y = 1.63; cab.castShadow = true;
-  g.add(cuerpo, cab); return g;
-}
-function camioneta() {
-  const g = new THREE.Group(); const add = (...a) => { const m = caja(...a); g.add(m); return m; };
-  add(1.85, 0.75, 5.2, C.blanco, 0, 0.35, 0, 0.12); add(1.75, 0.65, 2.3, C.blanco, 0, 1.08, 1.0, 0.18);
-  add(1.65, 0.5, 2.1, mat(0x2a3138, { roughness: 0.2, metalness: 0.4 }), 0, 1.15, 1.0, 0.12);
-  for (const sx of [-1, 1]) for (const sz of [-1.6, 1.6]) {
-    const r = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.38, 0.28, 24), mat(C.negro)); r.rotation.z = Math.PI / 2; r.position.set(sx * 0.86, 0.38, sz); r.castShadow = true; g.add(r);
-  }
-  add(1.5, 0.45, 0.45, C.carton, 0, 1.1, -1.7, 0.02); add(0.6, 0.4, 0.4, C.carton2, 0.4, 1.55, -1.75, 0.02);
-  return g;
-}
-function camion() {
-  const g = new THREE.Group(); const add = (...a) => { const m = caja(...a); g.add(m); return m; };
-  add(2.2, 2.3, 4.2, C.blanco, 0, 0.6, -0.6, 0.05); add(0.04, 0.5, 4.0, C.naranja, 1.12, 1.4, -0.6, 0);
-  add(2.1, 1.7, 1.6, 0xd9dcdf, 0, 0.55, 2.3, 0.15); add(1.9, 0.6, 0.05, mat(0x2a3138, { roughness: 0.2, metalness: 0.4 }), 0, 1.55, 3.12, 0.02);
-  for (const sx of [-1, 1]) for (const sz of [-2, 2.1]) {
-    const r = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.45, 0.3, 24), mat(C.negro)); r.rotation.z = Math.PI / 2; r.position.set(sx * 1.0, 0.45, sz); r.castShadow = true; g.add(r);
-  }
-  return g;
-}
-
-// ---------- módulo ----------
-function modulo(ancho, largo, alto, conRepisa) {
-  const g = new THREE.Group(); const W = ancho, L = largo, H = alto;
-  const add = (...a) => { const m = caja(...a); g.add(m); return m; };
-  add(W + 0.1, 0.08, L + 0.1, C.piso, 0, -0.08, 0, 0);
-  // muro del fondo y muro izquierdo con nervaduras
-  add(W, H, 0.05, C.panel, 0, 0, -L / 2 - 0.025, 0);
-  add(0.05, H, L, C.panel, -W / 2 - 0.025, 0, 0, 0);
-  for (let z = -L / 2 + 0.25; z < L / 2; z += 0.25) add(0.012, H * 0.96, 0.03, 0xe6e6e2, -W / 2 + 0.002, H * 0.02, z, 0);
-  add(0.02, 0.07, L, C.frame, -W / 2 + 0.005, H * 0.5, 0, 0);
-  // marco de acero (aristas)
-  const v = 0.07;
-  for (const [x, z] of [[-W / 2, -L / 2], [W / 2, -L / 2], [-W / 2, L / 2], [W / 2, L / 2]]) add(v, H, v, C.frame, x, 0, z, 0);
-  for (const z of [-L / 2, L / 2]) add(W + v, v, v, C.frame, 0, H - v, z, 0);
-  for (const x of [-W / 2, W / 2]) add(v, v, L, C.frame, x, H - v, 0, 0);
-  add(v, v, L, C.frame, W / 2, 0, 0, 0);
-  // muro derecho en vidrio muy tenue para leer que es cerrado
-  const vid = new THREE.Mesh(new THREE.PlaneGeometry(L, H), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.06, depthWrite: false, side: THREE.DoubleSide }));
-  vid.rotation.y = Math.PI / 2; vid.position.set(W / 2, H / 2, 0); g.add(vid);
-  // puertas dobles abiertas
-  const pw = W / 2 - 0.02;
+// ---------- el módulo: piso + dos murallas largas + puertas abiertas hacia afuera ----------
+function modulo(W, L, H, conRepisa) {
+  const g = new THREE.Group(); const P = (...a) => pieza(g, ...a);
+  P(W + 0.14, 0.1, L + 0.14, T.piso, 0, -0.1, 0, 0.01);
   for (const s of [-1, 1]) {
-    const piv = new THREE.Group(); piv.position.set(s * (W / 2 - 0.02), 0, L / 2 + 0.03);
-    const p = caja(pw, H - 0.12, 0.05, C.panel, -s * pw / 2, 0.04, 0, 0.01); piv.add(p);
-    const t = caja(0.025, 0.2, 0.04, C.grafito, -s * (pw - 0.12), 1.05, 0.04, 0.006); piv.add(t);
-    const pl = caja(0.16, 0.09, 0.01, C.naranja, -s * pw / 2, H - 0.3, 0.03, 0); if (s === 1) piv.add(pl);
-    piv.rotation.y = s * 1.95; piv.userData.puerta = s; g.add(piv);
+    const x = s * (W / 2 + 0.03);
+    P(0.06, H, L, T.muro, x, 0, 0, 0.004);
+    P(0.1, 0.1, L + 0.1, T.marco, x, H - 0.1, 0, 0.01);
+    P(0.1, 0.12, L + 0.1, T.marco, x, 0, 0, 0.01);
+    for (const z of [-L / 2, L / 2]) P(0.1, H, 0.1, T.marco, x, 0, z, 0.01);
+  }
+  const hoja = W / 2 - 0.02;
+  for (const s of [-1, 1]) {
+    const piv = new THREE.Group(); piv.position.set(s * (W / 2), 0, L / 2 + 0.05);
+    pieza(piv, hoja, H - 0.14, 0.045, T.muro, -s * hoja / 2, 0.07, 0, 0.008);
+    pieza(piv, 0.02, 0.22, 0.03, T.d, -s * (hoja - 0.1), 1.0, 0.035, 0.008);
+    if (s === 1) pieza(piv, 0.16, 0.09, 0.008, T.acento, -s * hoja / 2, H - 0.32, 0.026, 0.004);
+    piv.userData.abierta = s * (Math.PI / 2 + 0.22);
+    piv.rotation.y = piv.userData.abierta;
+    g.add(piv);
   }
   if (conRepisa) {
-    const rp = new THREE.Group(); const x0 = -W / 2 + REPISA.fondo / 2, z0 = -L / 2 + REPISA.largo / 2;
-    for (const n of REPISA.niveles) rp.add(caja(REPISA.fondo, 0.03, REPISA.largo, C.pino, x0, n.y - 0.03, z0, 0.005));
-    for (let z = -L / 2 + 0.04; z <= -L / 2 + REPISA.largo; z += REPISA.largo / 4)
-      for (const dx of [0.03, REPISA.fondo - 0.03]) rp.add(caja(0.045, 1.95, 0.045, C.pinoOsc, -W / 2 + dx, 0, Math.min(z, -L / 2 + REPISA.largo - 0.03), 0));
-    g.add(rp);
+    const x0 = -W / 2 + REPISA.fondo / 2, z0 = -L / 2 + REPISA.largo / 2;
+    for (const n of REPISA.niveles) P(REPISA.fondo, 0.028, REPISA.largo, T.b, x0, n.y - 0.028, z0, 0.006);
+    const postes = 5;
+    for (let i = 0; i < postes; i++) {
+      const z = -L / 2 + 0.03 + (REPISA.largo - 0.06) * (i / (postes - 1));
+      for (const dx of [0.025, REPISA.fondo - 0.025]) P(0.04, 1.86, 0.04, T.c, -W / 2 + dx, 0, z, 0.008);
+    }
   }
   return g;
 }
 
 // ---------- escena ----------
 export function crearBodega(host, opts = {}) {
-  const scene = new THREE.Scene();
-  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'low-power' });
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-  renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
+  const scene = new THREE.Scene(); scene.background = new THREE.Color(opts.fondo ?? 0xffffff);
+  const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+  const pr = Math.min(devicePixelRatio, innerWidth < 700 ? 1.5 : 2); renderer.setPixelRatio(pr);
+  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.VSMShadowMap;
+  renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.NoToneMapping;
   host.appendChild(renderer.domElement);
+  const pmrem = new THREE.PMREMGenerator(renderer); scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture; scene.environmentIntensity = 0.42;
 
-  const cam = new THREE.PerspectiveCamera(28, 1, 0.1, 200);
-  scene.add(new THREE.HemisphereLight(0xffffff, 0xd9d6cf, 1.35));
-  const sol = new THREE.DirectionalLight(0xffffff, 2.2); sol.position.set(-6, 11, 7); sol.castShadow = true;
-  sol.shadow.mapSize.set(2048, 2048); Object.assign(sol.shadow.camera, { left: -9, right: 9, top: 9, bottom: -9, near: 1, far: 40 }); sol.shadow.bias = -0.0004; sol.shadow.radius = 4;
-  scene.add(sol);
-  const suelo = new THREE.Mesh(new THREE.PlaneGeometry(80, 80), new THREE.ShadowMaterial({ opacity: 0.16 }));
-  suelo.rotation.x = -Math.PI / 2; suelo.position.y = -0.081; suelo.receiveShadow = true; scene.add(suelo);
-  const losa = new THREE.Mesh(new THREE.PlaneGeometry(9, 14), mat(0xe9e9e4)); losa.rotation.x = -Math.PI / 2; losa.position.set(0.5, -0.082, 3); losa.receiveShadow = true; scene.add(losa);
+  const cam = new THREE.PerspectiveCamera(24, 1, 0.1, 200);
+  const sol = new THREE.DirectionalLight(0xffffff, 2.3); sol.position.set(-6, 11, 3); sol.castShadow = true;
+  sol.shadow.mapSize.set(2048, 2048); Object.assign(sol.shadow.camera, { left: -8, right: 8, top: 8, bottom: -8, near: 1, far: 40 });
+  sol.shadow.radius = 9; sol.shadow.blurSamples = 16; sol.shadow.bias = -0.0005; scene.add(sol);
+  const relleno = new THREE.DirectionalLight(0xffffff, 0.5); relleno.position.set(6, 5, 8); scene.add(relleno);
+  const suelo = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.ShadowMaterial({ opacity: 0.16 }));
+  suelo.rotation.x = -Math.PI / 2; suelo.position.y = -0.101; suelo.receiveShadow = true; scene.add(suelo);
+
+  const composer = new EffectComposer(renderer);
+  composer.addPass(new RenderPass(scene, cam));
+  const ao = new GTAOPass(scene, cam, 10, 10); ao.updateGtaoMaterial({ radius: 0.35, distanceExponent: 1.4, thickness: 1.2, scale: 1.25, samples: 16 }); ao.blendIntensity = 1.0;
+  composer.addPass(ao); composer.addPass(new OutputPass());
 
   const controls = new OrbitControls(cam, renderer.domElement);
-  Object.assign(controls, { enableDamping: true, dampingFactor: 0.08, enableZoom: false, enablePan: false, minPolarAngle: 0.5, maxPolarAngle: 1.25, rotateSpeed: 0.6 });
-  controls.minAzimuthAngle = -0.35; controls.maxAzimuthAngle = 1.35;
+  Object.assign(controls, { enableDamping: true, dampingFactor: 0.08, enableZoom: false, enablePan: false, rotateSpeed: 0.55, minPolarAngle: 0.45, maxPolarAngle: 1.2 });
+  controls.enabled = opts.girar !== false;
 
-  const estado = { size: null, bodega: null, conRepisa: false, cuenta: {}, vehiculo: null, ultimo: null };
-  let mod = null, figura = persona(), veh = null; scene.add(figura);
-  const objetos = new Map(); // id -> {g, tipo}
-  const tweens = []; let corriendo = false, visible = true, hastaT = 0;
+  const st = { id: null, bodega: null, conRepisa: false, cuenta: {}, res: null, orden: [], visibles: 0 };
+  let mod = null; const objetos = new Map(); const tweens = []; let corriendo = false, hasta = 0, visible = true;
 
   function resize() {
     const r = host.getBoundingClientRect(); const w = Math.max(10, r.width), h = Math.max(10, r.height);
-    renderer.setSize(w, h, false); renderer.domElement.style.width = '100%'; renderer.domElement.style.height = '100%';
-    cam.aspect = w / h; cam.updateProjectionMatrix(); encuadrar(false); pedir(200);
+    renderer.setSize(w, h, false); composer.setSize(w, h);
+    renderer.domElement.style.cssText = 'width:100%;height:100%;display:block';
+    cam.aspect = w / h; cam.updateProjectionMatrix(); encuadrar(false); pedir(150);
   }
+  // Cámara alta frente a la puerta, mirando el fondo: las dos murallas encuadran la bodega.
   function encuadrar(animar = true) {
-    if (!estado.bodega) return;
-    const W = estado.bodega.ancho; const lejos = cam.aspect < 0.9 ? 1.5 : 1;
-    const target = new THREE.Vector3(-0.3, 0.8, 1.3);
-    const pos = new THREE.Vector3(8.5 + W * 1.2, 7.2 + W * 0.6, 9.5 + W * 0.8).multiplyScalar((opts.lejos || 0.95) * lejos);
-    if (animar && !reduce) tween(cam.position.clone(), pos, 900, (v) => cam.position.copy(v)); else cam.position.copy(pos);
-    controls.target.copy(target);
+    if (!st.bodega) return;
+    const W = st.bodega.ancho, L = st.bodega.largo, H = st.bodega.alto;
+    const target = new THREE.Vector3(0, H * 0.32, -0.25);
+    const dir = new THREE.Vector3(opts.lado ?? 0.16, 1.0, 0.78).normalize();
+    // radio que envuelve piso, murallas y puertas abiertas
+    const r = Math.hypot(W / 2 + W / 2, L / 2 + 0.6, H / 2) * 1.0;
+    const fovV = THREE.MathUtils.degToRad(cam.fov) / 2, fovH = Math.atan(Math.tan(fovV) * cam.aspect);
+    const dist = (r / Math.sin(Math.min(fovV, fovH))) * (opts.distancia || 0.95);
+    const pos = target.clone().add(dir.multiplyScalar(dist));
+    if (animar && !reduce) { const a = cam.position.clone(); tween(0, 1, 900, (e) => cam.position.lerpVectors(a, pos, e)); } else cam.position.copy(pos);
+    controls.target.copy(target); controls.update();
   }
-  function tween(a, b, ms, set, delay = 0, ease = easeOut, fin) {
-    tweens.push({ a, b, ms, set, t0: performance.now() + delay, ease, fin }); pedir(ms + delay + 50);
-  }
-  function pedir(ms) { hastaT = Math.max(hastaT, performance.now() + ms); if (!corriendo) { corriendo = true; requestAnimationFrame(loop); } }
+  function tween(a, b, ms, set, delay = 0, ease = easeOut, fin) { tweens.push({ a, b, ms, set, t0: performance.now() + delay, ease, fin }); pedir(ms + delay + 60); }
+  function pedir(ms) { hasta = Math.max(hasta, performance.now() + ms); if (!corriendo) { corriendo = true; requestAnimationFrame(loop); } }
   function loop(now) {
     for (let i = tweens.length - 1; i >= 0; i--) {
-      const t = tweens[i]; const k = Math.min(1, Math.max(0, (now - t.t0) / t.ms)); if (now < t.t0) continue;
-      const e = t.ease(k);
-      if (typeof t.a === 'number') t.set(t.a + (t.b - t.a) * e); else t.set(t.a.clone().lerp(t.b, e), e);
-      if (k >= 1) { tweens.splice(i, 1); t.fin && t.fin(); }
+      const t = tweens[i]; if (now < t.t0) continue; const k = Math.min(1, (now - t.t0) / t.ms);
+      t.set(t.a + (t.b - t.a) * t.ease(k)); if (k >= 1) { tweens.splice(i, 1); t.fin && t.fin(); }
     }
     const mov = controls.update();
-    if (visible) renderer.render(scene, cam);
-    if (tweens.length || mov || now < hastaT) requestAnimationFrame(loop); else corriendo = false;
+    if (visible) composer.render();
+    if (tweens.length || mov || now < hasta) requestAnimationFrame(loop); else corriendo = false;
   }
-  controls.addEventListener('change', () => pedir(300));
+  controls.addEventListener('change', () => pedir(250));
 
-  function setSize(size, bodega, conRepisa) {
-    estado.size = size; estado.bodega = bodega; estado.conRepisa = conRepisa;
-    if (mod) scene.remove(mod);
-    mod = modulo(bodega.ancho, bodega.largo, bodega.alto, conRepisa); scene.add(mod);
-    if (!reduce) { mod.scale.set(1, 0.01, 1); tween(0.01, 1, 650, (v) => mod.scale.set(1, v, 1)); }
-    figura.position.set(bodega.ancho / 2 + 0.45, 0, bodega.largo / 2 + 0.55);
-    posVehiculo(); encuadrar(); repack(true);
-  }
-  function posVehiculo() {
-    if (!veh || !estado.bodega) return;
-    const W = estado.bodega.ancho, L = estado.bodega.largo; const cam = estado.vehiculo === 'camion';
-    veh.position.set(-W / 2 - (cam ? 1.75 : 1.55), 0, L / 2 + (cam ? 2.9 : 2.5));
-  }
-  function setVehiculo(tipo) {
-    if (estado.vehiculo === tipo) return; estado.vehiculo = tipo;
-    if (veh) { const v = veh; tween(v.position.z, v.position.z + 6, 500, (z) => (v.position.z = z), 0, easeIn, () => scene.remove(v)); veh = null; }
-    if (!tipo) return;
-    veh = tipo === 'camion' ? camion() : camioneta(); scene.add(veh); posVehiculo();
-    const zf = veh.position.z; if (!reduce) tween(zf + 7, zf, 900, (z) => (veh.position.z = z), 150);
-  }
-
-  function setItems(cuenta) { estado.cuenta = { ...cuenta }; return repack(false); }
-  function repack(rehacer) {
-    if (!estado.bodega) return null;
-    const lista = expandir(estado.cuenta);
-    const res = empacar(lista, estado.bodega, estado.conRepisa ? REPISA : null);
-    const W = estado.bodega.ancho, L = estado.bodega.largo;
-    const vivos = new Set();
-    // afuera: en fila frente a la puerta, sobre la losa
-    let ax = -W / 2 - 1.2, az = L / 2 + 1.6, fila = 0;
-    const dest = [...res.puestos.map((p) => ({ ...p, x: p.x - W / 2, z: p.z - L / 2, afuera: false }))];
-    for (const a of res.afuera) {
-      const it = ITEMS[a.tipo]; if (ax + it.w > W / 2 + 3.2) { ax = -W / 2 - 1.2; az += 1.0; fila++; }
-      dest.push({ ...a, x: ax + it.w / 2, z: az, y: 0, rot: 0, afuera: true }); ax += it.w + 0.15;
-    }
-    let i = 0;
-    for (const p of dest) {
-      vivos.add(p.id); let o = objetos.get(p.id); const it = ITEMS[p.tipo];
-      const rotY = p.rot ? Math.PI / 2 : 0;
-      const target = new THREE.Vector3(p.x, p.y, p.z);
-      if (!o || rehacer) {
-        if (o) scene.remove(o.g);
-        const g = modelo(p.tipo); g.rotation.y = rotY; scene.add(g); o = { g, tipo: p.tipo }; objetos.set(p.id, o);
-        const delay = reduce ? 0 : i * 45; i++;
-        g.position.set(p.x, p.y + 3.2 + Math.random() * 0.6, p.z); g.visible = reduce;
-        if (reduce) g.position.copy(target);
-        else tween(g.position.clone(), target, 520, (v) => { g.visible = true; g.position.copy(v); }, delay, easeOutBounce);
-      } else {
-        const g = o.g; const from = g.position.clone();
-        if (from.distanceTo(target) > 0.01 || Math.abs(g.rotation.y - rotY) > 0.01) {
-          const r0 = g.rotation.y;
-          tween(from, target, 480, (v, e) => { g.position.copy(v); g.position.y += Math.sin(Math.PI * e) * 0.6; g.rotation.y = r0 + (rotY - r0) * e; }, i++ * 12, easeInOut);
-        }
+  function setBodega(id, bodega, conRepisa = bodega.repisa) {
+    const cambia = st.id !== id || st.conRepisa !== conRepisa;
+    st.id = id; st.bodega = bodega; st.conRepisa = conRepisa;
+    if (cambia) {
+      if (mod) scene.remove(mod);
+      mod = modulo(bodega.ancho, bodega.largo, bodega.alto, conRepisa); scene.add(mod);
+      if (!reduce) for (const p of mod.children.filter((c) => c.userData.abierta !== undefined)) {
+        const fin = p.userData.abierta; p.rotation.y = 0; tween(0, fin, 1100, (v) => (p.rotation.y = v), 250, easeInOut);
       }
-      o.afuera = p.afuera;
+      for (const o of objetos.values()) { scene.remove(o.g); } objetos.clear();
+      encuadrar();
     }
-    for (const [id, o] of objetos) if (!vivos.has(id)) {
-      objetos.delete(id); const g = o.g; const y0 = g.position.y;
-      tween(y0, y0 + 3, 380, (y) => { g.position.y = y; g.scale.setScalar(Math.max(0.01, 1 - (y - y0) / 3)); }, 0, easeIn, () => scene.remove(g));
+    return empacarYPoner();
+  }
+  function setItems(cuenta) { st.cuenta = { ...cuenta }; return empacarYPoner(); }
+  function empacarYPoner() {
+    if (!st.bodega) return null;
+    const W = st.bodega.ancho, L = st.bodega.largo;
+    const res = empacar(expandir(st.cuenta), st.bodega, st.conRepisa ? REPISA : null);
+    const orden = [...res.puestos].sort((a, b) => a.z - b.z || a.y - b.y || a.x - b.x);
+    const vivos = new Set(orden.map((p) => p.id));
+    for (const [id, o] of objetos) if (!vivos.has(id)) { if (o.dentro) quitar(o); else scene.remove(o.g); objetos.delete(id); }
+    for (const p of orden) {
+      const pos = new THREE.Vector3(p.x - W / 2, p.y, p.z - L / 2); const rot = p.rot ? Math.PI / 2 : 0;
+      let o = objetos.get(p.id);
+      if (!o) { const g = modelo(p.tipo); g.visible = false; scene.add(g); o = { g, dentro: false }; objetos.set(p.id, o); }
+      const antes = o.dest; o.dest = pos; o.rot = rot;
+      if (o.dentro && antes && antes.distanceTo(pos) > 0.005) {
+        const a = o.g.position.clone(), r0 = o.g.rotation.y;
+        tween(0, 1, 480, (e) => { o.g.position.lerpVectors(a, pos, e); o.g.position.y += Math.sin(Math.PI * e) * 0.35; o.g.rotation.y = r0 + (rot - r0) * e; }, 0, easeInOut);
+      }
     }
-    pedir(1200);
-    estado.ultimo = res; opts.onPack && opts.onPack(res);
+    st.res = res; st.orden = orden; opts.onPack && opts.onPack(res); pedir(200);
     return res;
+  }
+  function quitar(o) { const g = o.g; const y0 = g.position.y; tween(0, 1, 320, (e) => { g.position.y = y0 + e * 2; g.scale.setScalar(Math.max(0.001, 1 - e)); }, 0, easeIn, () => scene.remove(g)); }
+  // Muestra los primeros n objetos (de fondo a puerta). Los que entran caen; los que salen suben.
+  function mostrar(n = Infinity) {
+    n = Math.min(n, st.orden.length); let k = 0;
+    st.orden.forEach((p, i) => {
+      const o = objetos.get(p.id); if (!o) return;
+      if (i < n && !o.dentro) {
+        o.dentro = true; const g = o.g; g.visible = true; g.scale.setScalar(1); g.rotation.y = o.rot;
+        if (reduce) { g.position.copy(o.dest); return; }
+        const alto = 2.6, d = o.dest; g.position.set(d.x, d.y + alto, d.z);
+        tween(0, 1, 560, (e) => { if (o.dentro) g.position.set(d.x, d.y + alto * (1 - e), d.z); }, k++ * 38, easeOutBounce);
+      } else if (i >= n && o.dentro) {
+        o.dentro = false; const g = o.g; const y0 = g.position.y;
+        tween(0, 1, 260, (e) => { if (!o.dentro) g.position.y = y0 + e * 2.4; }, 0, easeIn, () => { if (!o.dentro) g.visible = false; });
+      }
+    });
+    st.visibles = n; pedir(200);
   }
 
   const ro = new ResizeObserver(resize); ro.observe(host);
-  const io = new IntersectionObserver(([e]) => { visible = e.isIntersecting; if (visible) pedir(100); }); io.observe(host);
+  const io = new IntersectionObserver(([e]) => { visible = e.isIntersecting; if (visible) pedir(80); }); io.observe(host);
   resize();
-
-  return {
-    setSize, setItems, setVehiculo,
-    girar(a) { if (reduce) return; const az = controls.getAzimuthalAngle(); tween(az, a, 900, (v) => { const r = cam.position.clone().sub(controls.target); const s = new THREE.Spherical().setFromVector3(r); s.theta = v; cam.position.copy(controls.target.clone().add(new THREE.Vector3().setFromSpherical(s))); }); },
-    get estado() { return estado; },
-    dispose() { ro.disconnect(); io.disconnect(); controls.dispose(); renderer.dispose(); host.removeChild(renderer.domElement); },
-  };
+  return { setBodega, setItems, mostrar, get estado() { return st; }, get total() { return st.orden.length; },
+    dispose() { ro.disconnect(); io.disconnect(); controls.dispose(); composer.dispose(); renderer.dispose(); host.removeChild(renderer.domElement); } };
 }
 
 function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
 function easeIn(t) { return t * t * t; }
 function easeInOut(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
-function easeOutBounce(x) {
-  const n1 = 7.5625, d1 = 2.75;
-  if (x < 1 / d1) return n1 * x * x; if (x < 2 / d1) return n1 * (x -= 1.5 / d1) * x + 0.75;
-  if (x < 2.5 / d1) return n1 * (x -= 2.25 / d1) * x + 0.9375; return n1 * (x -= 2.625 / d1) * x + 0.984375;
-}
+function easeOutBounce(x) { const n = 7.5625, d = 2.75; if (x < 1 / d) return n * x * x; if (x < 2 / d) return n * (x -= 1.5 / d) * x + 0.75; if (x < 2.5 / d) return n * (x -= 2.25 / d) * x + 0.9375; return n * (x -= 2.625 / d) * x + 0.984375; }
