@@ -1,0 +1,17 @@
+{
+  "name": "superbodegas-web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 5180",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1 --port 5181"
+  },
+  "devDependencies": {
+    "vite": "^6.4.6"
+  },
+  "dependencies": {
+    "leaflet": "^1.9.4",
+    "three": "^0.170.0"
+  }
+}
