@@ -6,11 +6,17 @@
   <title>Arrienda · Super Bodegas</title>
   <meta name="description" content="Arrienda tu bodega en Lampa en cinco pasos. Ves el precio al tiro y te escribimos por WhatsApp.">
   <meta name="theme-color" content="#ffffff">
-  <link rel="icon" href="/favicon.png" type="image/png">
-  <link rel="apple-touch-icon" href="/marca/icono-180.png">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Super Bodegas">
+  <meta property="og:title" content="Super Bodegas · Bodegas en Lampa">
+  <meta property="og:description" content="Bodegas de 7 y 15 m² en Lampa. Llegas en auto hasta la puerta. Desde $69.990 al mes.">
+  <meta property="og:image" content="https://sudo-osito.github.io/superbodegas/img/og.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="./favicon.png" type="image/png">
+  <link rel="apple-touch-icon" href="./marca/icono-180.png">
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-  <link rel="stylesheet" href="/src/styles.css">
+  <link rel="stylesheet" href="./src/styles.css">
 </head>
 <body>
 <!-- @cabecera -->
@@ -72,11 +78,12 @@
 </main>
 
 <section class="wrap listo" id="listo" hidden aria-live="polite">
-  <img class="mascota" src="/marca/mascota.png" alt="" width="180" height="120">
+  <img class="mascota" src="./marca/mascota.png" alt="" width="180" height="120">
   <h1 class="t2" id="listo-titulo">Listo.</h1>
   <p class="sub" id="listo-texto" style="max-width:40ch"></p>
   <p class="codigo">Código de tu solicitud: <b id="codigo"></b></p>
-  <div class="acciones" style="justify-content:center"><a class="boton" id="listo-wa" target="_blank" rel="noopener">Escríbenos por WhatsApp</a><a class="enlace" href="/">Volver al inicio</a></div>
+  <p class="aviso-vista" id="aviso-vista" hidden>Vista previa: en esta versión de prueba la solicitud no se envía. En el sitio publicado llega al equipo por Telegram.</p>
+  <div class="acciones" style="justify-content:center"><a class="boton" id="listo-wa" target="_blank" rel="noopener">Escríbenos por WhatsApp</a><a class="enlace" href="./">Volver al inicio</a></div>
 </section>
 
 <div class="total" id="total">
@@ -89,6 +96,6 @@
     </div>
   </div>
 </div>
-<script type="module" src="/src/arrienda.js"></script>
+<script type="module" src="./src/arrienda.js"></script>
 </body>
 </html>

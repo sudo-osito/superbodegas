@@ -175,12 +175,15 @@ $('#form').addEventListener('submit', async (ev) => {
   if (!$('#acepto').checked) { eg.textContent = 'Marca la casilla para que podamos contactarte.'; $('#acepto').focus(); return; }
   const bt = $('#seguir'); bt.disabled = true; bt.textContent = 'Enviando…';
   try {
-    const r = await fetch('/api/solicitud', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(d) });
-    const j = await r.json().catch(() => ({}));
-    if (!r.ok || !j.ok) { const e2 = j.errores || {}; Object.entries(e2).forEach(([k, m]) => err(k, m)); eg.textContent = e2.general || 'Revisa los datos marcados.'; return; }
+    // en la vista previa estática (GitHub Pages) no hay servidor: se muestra el cierre con un aviso honesto
+    const estatico = location.hostname.endsWith('github.io');
+    const r = estatico ? null : await fetch('api/solicitud', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(d) });
+    const j = r ? await r.json().catch(() => ({})) : { ok: true, codigo: 'SB-' + Math.random().toString(36).slice(2, 8).toUpperCase(), vista: true };
+    if (r && (!r.ok || !j.ok)) { const e2 = j.errores || {}; Object.entries(e2).forEach(([k, m]) => err(k, m)); eg.textContent = e2.general || 'Revisa los datos marcados.'; return; }
     try { localStorage.removeItem(CLAVE); } catch {}
     $('#arr').hidden = true; $('#total').hidden = true; $('#listo').hidden = false;
     $('#codigo').textContent = j.codigo;
+    $('#aviso-vista').hidden = !j.vista;
     $('#listo-titulo').textContent = `Listo, ${d.nombre.split(' ')[0]}.`;
     $('#listo-texto').textContent = `Tu bodega de ${st.bodega} m² está en buenas manos. Te escribimos por WhatsApp ${NEGOCIO.respuesta} para confirmar.`;
     $('#listo-wa').href = `https://wa.me/${NEGOCIO.whatsapp.replace('+', '')}?text=${encodeURIComponent(`Hola, envié la solicitud ${j.codigo} para la bodega de ${st.bodega} m².`)}`;

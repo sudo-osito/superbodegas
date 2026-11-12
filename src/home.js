@@ -62,6 +62,6 @@ cuando($('#mapa'), async () => {
   const mapa = L.map('mapa', { scrollWheelZoom: false, zoomControl: false, attributionControl: true }).setView([lat - (chico ? 0.03 : 0), lng - (chico ? 0 : 0.09)], zoom);
   L.control.zoom({ position: 'bottomright' }).addTo(mapa);
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '© OpenStreetMap' }).addTo(mapa);
-  const icono = L.divIcon({ className: '', iconSize: [56, 56], iconAnchor: [28, 28], html: '<img class="pin" src="/marca/icono-180.png" alt="">' });
+  const icono = L.divIcon({ className: '', iconSize: [56, 56], iconAnchor: [28, 28], html: '<img class="pin" src="./marca/icono-180.png" alt="">' });
   L.marker([lat, lng], { icon: icono, title: 'Super Bodegas · Lampa' }).addTo(mapa);
 }, '400px');
