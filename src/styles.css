@@ -530,3 +530,20 @@ p { margin: 0; }
 /* cartas: solo la que tiene el cursor se agranda */
 .cartas .carta, .cartas .carta.activa { flex-grow: 1; transition: flex-grow .7s cubic-bezier(.2, .8, .2, 1), box-shadow .5s; transform: none !important; }
 @media (hover: hover) and (min-width: 761px) { .cartas .carta:hover, .cartas .carta:focus-visible { flex-grow: 1.7; } }
+
+/* CTA final: franja naranja con la mascota */
+.cta-final { padding-block: clamp(48px, 8vh, 96px); }
+.cta-caja { position: relative; background: var(--naranja); color: #fff; border-radius: 32px; padding: clamp(32px, 5vw, 64px); display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 24px; overflow: hidden; }
+.cta-caja::after { content: ""; position: absolute; right: -10%; top: -40%; width: 60%; height: 180%; background: radial-gradient(closest-side, rgb(255 255 255 / .22), rgb(255 255 255 / 0)); pointer-events: none; }
+.cta-texto { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: flex-start; gap: 16px; }
+.cta-texto .t2 { color: #fff; }
+.cta-texto p { font-size: clamp(17px, 1.6vw, 20px); color: rgb(255 255 255 / .9); }
+.cta-texto p b { color: #fff; }
+.cta-mascota { position: relative; z-index: 1; width: clamp(160px, 20vw, 280px); height: auto; filter: drop-shadow(0 24px 30px rgb(0 0 0 / .18)); animation: flota 5s ease-in-out infinite; }
+@media (max-width: 760px) { .cta-caja { grid-template-columns: minmax(0, 1fr); text-align: left; } .cta-mascota { position: absolute; right: -10px; top: -6px; width: 120px; } .cta-texto .t2 { font-size: 30px; padding-right: 90px; } }
+@media (prefers-reduced-motion: reduce) { .cta-mascota { animation: none; } }
+.cta-caja { background: linear-gradient(120deg, #fff4ed 0%, #ffe6d6 100%); color: var(--tinta); box-shadow: inset 0 0 0 1px rgb(255 91 20 / .14); }
+.cta-caja::after { background: radial-gradient(closest-side, rgb(255 91 20 / .14), rgb(255 91 20 / 0)); }
+.cta-texto .t2 { color: var(--tinta); }
+.cta-texto p { color: var(--gris); }
+.cta-texto p b { color: var(--tinta); }
