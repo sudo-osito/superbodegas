@@ -368,3 +368,74 @@ p { margin: 0; }
   .dolor[data-d="0"], .dolor[data-d="1"] { top: 11% !important; }
   .banda .mascota-banda { right: 4%; bottom: 6%; width: 120px; }
 }
+
+/* ====================== v5: servicio con mascota ====================== */
+.velo-hero { position: absolute; inset: 0; z-index: 1; background: linear-gradient(180deg, rgb(255 255 255 / .9) 0%, rgb(255 255 255 / .72) 34%, rgb(255 255 255 / .25) 50%, rgb(255 255 255 / 0) 62%); pointer-events: none; }
+.hero .sub { color: #2c2c2e; font-weight: 500; max-width: 36ch; }
+.hero .sub b { color: var(--tinta); }
+.promo { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 999px; background: #fff; box-shadow: 0 0 0 1px rgb(255 91 20 / .35); font-size: 14px; color: var(--tinta); }
+.promo b { color: var(--naranja); font-weight: 700; }
+.pasos-masc { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(16px, 2.4vw, 32px); }
+.pasos-masc article { background: #fff; border-radius: 28px; overflow: hidden; display: flex; flex-direction: column; gap: 8px; padding-bottom: 26px; box-shadow: 0 0 0 1px rgb(0 0 0 / .04), 0 12px 40px rgb(0 0 0 / .05); }
+.pasos-masc img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; margin-bottom: 12px; }
+.pasos-masc b { font-size: 21px; font-weight: 700; letter-spacing: -0.03em; padding: 0 24px; }
+.pasos-masc p { color: var(--gris); padding: 0 24px; }
+@media (max-width: 860px) { .pasos-masc { grid-template-columns: minmax(0, 1fr); } .pasos-masc img { aspect-ratio: 16 / 9; } }
+.hechos-lista { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 14px; color: rgb(255 255 255 / .78); font-size: 16px; }
+.hechos-lista li { padding-top: 14px; border-top: 1px solid rgb(255 255 255 / .22); }
+.hechos-lista b { display: block; color: #fff; font-size: 18px; font-weight: 600; }
+.duo-retiro { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(28px, 5vw, 72px); align-items: center; }
+.foto-redonda { border-radius: 32px; overflow: hidden; aspect-ratio: 3 / 2; }
+.foto-redonda img { width: 100%; height: 100%; object-fit: cover; }
+@media (max-width: 860px) { .duo-retiro { grid-template-columns: minmax(0, 1fr); } }
+.horario { display: grid; grid-template-columns: auto 1fr; gap: 4px 18px; margin: 0; font-size: 15px; }
+.horario dt { color: var(--gris); } .horario dd { margin: 0; font-weight: 600; }
+.mascota-cierre { width: clamp(160px, 18vw, 260px); height: auto; animation: flota 5s ease-in-out infinite; }
+
+/* arriendo: el paso 1 cabe en pantalla */
+.arr-panel { padding-block: 24px 110px; justify-content: flex-start; }
+.prog { margin-bottom: 18px; }
+.fase { gap: 14px; }
+.fase h1 { font-size: clamp(28px, 2.6vw, 38px); }
+#atajos { grid-template-columns: 1fr 1fr; }
+#atajos .op { padding: 14px 16px; min-height: 72px; }
+#atajos .op .nom { font-size: 16px; }
+#atajos .op:last-child { grid-column: 1 / -1; min-height: 0; }
+@media (max-width: 520px) { #atajos { grid-template-columns: 1fr 1fr; } #atajos .op { min-height: 64px; padding: 12px; } #atajos .op .nom { font-size: 15px; } }
+
+.logo-img { height: 30px; width: auto; display: block; }
+.pie .logo-img { height: 34px; }
+.fase h1:focus, .fase h1:focus-visible { outline: none; }
+
+/* héroe v5: texto a la izquierda, mascota a la derecha */
+.hero .encima { align-items: flex-start; text-align: left; justify-content: center; padding-top: var(--isla); }
+.hero .encima .acciones { justify-content: flex-start !important; }
+.hero .t1 { max-width: 12ch; }
+.hero img { object-position: 60% 100%; }
+.velo-hero { background: linear-gradient(90deg, rgb(255 255 255 / .55) 0%, rgb(255 255 255 / .25) 40%, rgb(255 255 255 / 0) 60%); }
+@media (max-width: 760px) {
+  .hero .encima { justify-content: flex-start; padding-top: calc(var(--isla) + 28px); }
+  .hero img { object-position: 78% 100%; }
+  .velo-hero { background: linear-gradient(180deg, rgb(255 255 255 / .85) 0%, rgb(255 255 255 / .5) 45%, rgb(255 255 255 / 0) 62%); }
+}
+
+.hero .encima { justify-content: flex-start; padding-top: calc(var(--isla) + clamp(24px, 5vh, 56px)); }
+.velo-hero { background: linear-gradient(90deg, rgb(255 255 255 / .85) 0%, rgb(255 255 255 / .62) 32%, rgb(255 255 255 / 0) 56%); }
+.pie .logo-img { align-self: flex-start; }
+@media (max-width: 760px) {
+  .velo-hero { background: linear-gradient(180deg, rgb(255 255 255 / .88) 0%, rgb(255 255 255 / .6) 42%, rgb(255 255 255 / 0) 60%); }
+  #seguridad .velo { background: linear-gradient(180deg, rgb(8 12 24 / .85) 0%, rgb(8 12 24 / .7) 48%, rgb(8 12 24 / .1) 75%) !important; }
+}
+@media (max-width: 760px) {
+  .arr-escena { height: 27svh !important; min-height: 190px !important; }
+  .arr-escena { position: sticky; }
+  .arr-estado { position: absolute; left: 0; right: 0; bottom: 4px; padding: 0; min-height: 0; gap: 8px; }
+  .arr-estado p { font-size: 13px; }
+  .arr-estado .boton { min-height: 28px; padding: 0 12px; font-size: 12px; }
+  .arr-panel { padding-top: 12px; }
+  .fase h1 { font-size: 26px; }
+  .fase .ayuda { display: none; }
+  #atajos .op { min-height: 58px; padding: 10px 12px; }
+  .prog { margin-bottom: 10px; }
+  #seguridad img { object-position: 62% 50%; }
+}
